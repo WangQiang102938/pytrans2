@@ -43,9 +43,10 @@ class CaptureNode:
         CONTAINER = auto()
         TEXT = auto()
         IMAGE = auto()
+        STRUCTURE=auto()
 
     class VisualMemo:
-        def __init__(self, left: float, top: float, right: float, bottom: float, page_no: float, *args, **kwargs) -> None:
+        def __init__(self, left: float, top: float, right: float, bottom: float, page_no: int, *args, **kwargs) -> None:
             self.left = left
             self.right = right
             self.top = top
@@ -54,7 +55,7 @@ class CaptureNode:
             self.args = args
             self.kwargs = kwargs
 
-        def update(self, left: float = None, top: float = None, right: float = None, bottom: float = None, page_no: float = None, *args, **kwargs) -> None:
+        def update(self, left: float = None, top: float = None, right: float = None, bottom: float = None, page_no: int = None, *args, **kwargs) -> None:
             self.left = left if left != None else self.left
             self.right = right if right != None else self.right
             self.top = top if top != None else self.top

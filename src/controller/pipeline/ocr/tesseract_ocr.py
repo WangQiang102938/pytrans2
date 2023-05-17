@@ -21,7 +21,7 @@ class TesseractOCR(PipelineNode):
     def get_title(self):
         return "Tesseract OCR"
 
-    def option_ui_setup(self, container: QWidget) -> QWidget:
+    def option_ui_setup(self, container: QWidget):
         container_layout = QHBoxLayout(container) if container.layout()==None else container.layout()
         container_layout.setContentsMargins(2, 2, 2, 2)
         container_layout.addWidget(self.widget)
