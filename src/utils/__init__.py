@@ -1,3 +1,4 @@
+from model.capture.capture_node import CaptureNode
 import utils.pipeline_utils as pipeline_utils
 import utils.preview_utils as preview_utils
 import random
@@ -6,6 +7,7 @@ import PyQt6.sip as sip
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from typing import *
 
 def qwidget_cleanup(widget:QWidget):
     for child in widget.children():
@@ -36,3 +38,17 @@ def swap_list_item(swap_list:list,a_i:int,b_i:int):
     a=swap_list.pop(a_i)
     swap_list.insert(a_i,b)
     swap_list.insert(b_i,a)
+
+def count_node(node:CaptureNode,count=0):
+    for child in node.children:
+        count=count_node(child,count)
+    return count+1
+
+T=TypeVar("T")
+
+def safe_get_dict_key(_dict,key,type:Type[T])->T:
+    if isinstance(_dict,dict) and key in _dict:
+        val=_dict[key]
+        return val if isinstance(val,type) else None
+    return None
+

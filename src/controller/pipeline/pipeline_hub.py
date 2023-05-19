@@ -70,7 +70,7 @@ class PipelineNode:
         self.link_info=dict[str,Tuple[PipelineNode,str]]()
 
     def get_ins_name(self):
-        return str(f"{self.name}_{self.uuid}")
+        return str(f"{self.name}@{id(self)}")
 
     def option_ui_setup(self,container:QWidget):
         pass

@@ -36,6 +36,7 @@ class PipelineViewhub:
         self.ui.PipeRemoveBtn.clicked.connect(lambda x:self.pipeline_edit(PipelineEditFlag.REMOVE_NODE))
         self.ui.pipeOptionViewList.currentRowChanged.connect(self.pipe_option_changed)
         self.ui.pipeEditList.currentRowChanged.connect(self.pipe_edit_changed)
+        self.ui.pipeRunBtn.clicked.connect(self.pipeline_run)
         self.current_link_widget=PipeLinkEditWidget().bind(self)
 
     def pipeline_edit(self,flag:'PipelineEditFlag'):
@@ -95,6 +96,11 @@ class PipelineViewhub:
             pytrans_utils.qwidget_cleanup(pipe_node_option_con)
 
     def pipe_edit_changed(self,row:int):
-        link_edit_con=self.ui.pipeLinkEditCon
+        pass
+
+    def pipeline_run(self):
+        self.view_hub.main.listener_hub.event_inqueue(
+            PyTransEvent(PyTransEvent.Type.PIPELINE_RUN)
+        )
 
 

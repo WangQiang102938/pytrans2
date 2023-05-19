@@ -22,9 +22,6 @@ class StandardCrop(PipelineNode):
     def __init__(self, pipe_hub: PipelineHub) -> None:
         super().__init__(pipe_hub)
 
-    def get_ins_name(self):
-        return f"StdCropNode@{id(self)}"
-
     def option_ui_setup(self, container: QWidget):
         return super().option_ui_setup(container)
 
@@ -35,10 +32,11 @@ class StandardCrop(PipelineNode):
         memo=memo if memo is not None else Memo(self).bind_node(node,overwrite_flag=True)
 
         visual_memo = node.get_visual_memo()
-        img = node.working_doc.page_cache[visual_memo.page_no]
 
         if visual_memo==None:
             return
+
+        img = node.working_doc.page_cache[visual_memo.page_no]
         node_rect = preview_utils.map_rect_from_ratio(
             QRectF(visual_memo.left, visual_memo.top,
                    visual_memo.right, visual_memo.bottom),

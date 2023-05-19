@@ -1,5 +1,3 @@
-
-
 import io
 from model.capture.capture_node import CaptureNode
 from listener.listener_hub import Listener, PyTransEvent

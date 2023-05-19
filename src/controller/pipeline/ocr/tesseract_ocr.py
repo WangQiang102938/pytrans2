@@ -4,8 +4,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtWidgets import QWidget
-
-from controller.pipeline.pipeline_hub import PipelineHub, PipelineNode
+from PIL.Image import Image
+from controller.pipeline.pipeline_hub import PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
 import utils.pipeline_utils as pipeline_utils
 import utils
@@ -22,9 +22,6 @@ class TesseractOCR(PipelineNode):
         super().__init__(pipe_hub)
         self.widget = TesseractWidget().bind()
 
-    def get_title(self):
-        return "Tesseract OCR"
-
     def option_ui_setup(self, container: QWidget):
         container_layout = QHBoxLayout(container) if container.layout()==None else container.layout()
         container_layout.setContentsMargins(2, 2, 2, 2)
@@ -32,32 +29,22 @@ class TesseractOCR(PipelineNode):
         container.setVisible(True)
         container.show()
 
-    def process_node(self, node: CaptureNode, dfs_mode=False, update_flag=False):
-        if node.node_type() != node.node_type().TEXT and node.get_visual_memo() != None:
-            return
-        if self.widget.realtime_check.checkState()==Qt.CheckState.Unchecked and update_flag:
-            return
-        visual_memo = node.get_visual_memo()
-        img = node.working_doc.page_cache[visual_memo.page_no]
-        node_rect = utils.preview_utils.map_rect_from_ratio(
-            QRectF(visual_memo.left, visual_memo.top,
-                   visual_memo.right, visual_memo.bottom),
-            QRectF(0, 0, img.size[0], img.size[1])
-        )
-        node_img = img.crop(
-            (node_rect.left(), node_rect.top(), node_rect.width(), node_rect.height()))
-        lang_combo = self.widget.lang_select_combo
-        ocr_result = pytesseract.image_to_string(
-            node_img, lang=lang_combo.currentData())
-        print(ocr_result)
-        return super().process_node(node, dfs_mode)
-
     def get_port_keys(self, input_port=True) -> List[str]:
         return [
             PortEnum.IN_IMAGE.value
             ] if input_port else [
             PortEnum.OUT_TEXT.value
             ]
+
+    def run_pipe(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
+        img=utils.safe_get_dict_key(input,PortEnum.IN_IMAGE.value,Image)
+        if img==None:
+            return False
+        lang_combo = self.widget.lang_select_combo
+        ocr_result = pytesseract.image_to_string(
+            img, lang=lang_combo.currentData())
+        print(ocr_result)
+        return super().run_pipe(node, mode, **input)
 
 
 class TesseractWidget(QFrame):
