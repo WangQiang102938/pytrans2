@@ -4,6 +4,7 @@ import sys
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
+from view.pipeline.pipeline_viewhub import PipelineViewhub
 from view.preview.preview_hub import PreviewHub
 
 from typing import TYPE_CHECKING
@@ -16,3 +17,4 @@ class ViewHub:
         self.main = main
         self.ui = main.ui
         self.preview_hub = PreviewHub(self)
+        self.pipe_viewhub=PipelineViewhub(self)

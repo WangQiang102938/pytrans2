@@ -901,7 +901,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="pipeLinkEditCon">
+          <widget class="QGroupBox" name="pipeLinkCon">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>

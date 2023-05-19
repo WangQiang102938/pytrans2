@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -10,6 +11,9 @@ import utils.pipeline_utils as pipeline_utils
 import utils
 import pytesseract
 
+class PortEnum(Enum):
+    IN_IMAGE='input image'
+    OUT_TEXT='output text'
 
 class TesseractOCR(PipelineNode):
     name="Tesseract OCR"
@@ -48,10 +52,18 @@ class TesseractOCR(PipelineNode):
         print(ocr_result)
         return super().process_node(node, dfs_mode)
 
+    def get_port_keys(self, input_port=True) -> List[str]:
+        return [
+            PortEnum.IN_IMAGE.value
+            ] if input_port else [
+            PortEnum.OUT_TEXT.value
+            ]
+
 
 class TesseractWidget(QFrame):
     def bind(self):
         self.main_layout = QVBoxLayout(self)
+        # self.setStyleSheet("border:1px solid red")
 
         self.realtime_check = QCheckBox(self)
         self.realtime_checkF = pipeline_utils.FormItem(self).setup(
@@ -62,7 +74,11 @@ class TesseractWidget(QFrame):
         self.lang_select_conboF = pipeline_utils.FormItem(self).setup(
             "OCR Lang", self.lang_select_combo
         )
-
+        self.lang_select_combo.setMaximumWidth(100)
+        self.lang_select_combo.setMaxVisibleItems(10)
+        self.lang_select_combo.setStyleSheet(
+            "QComboBox{combobox-popup:0;}"
+        )
         for enum in TesseractLangEnum:
             self.lang_select_combo.addItem(enum.name, enum.value)
         self.lang_select_combo.setCurrentText(TesseractLangEnum.English.name)

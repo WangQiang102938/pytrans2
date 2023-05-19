@@ -26,11 +26,6 @@ class PipelineHub:
         self.ui=self.ctrl_hub.ui
         self.scan_pipline_node(os.path.split(__file__)[0])
 
-        for node in self.pipeline_nodes:
-            ui=self.ctrl_hub.ui
-            ui.pipeAvaliableCombo.addItem(node.name,node)
-            # ui.pipeOptionCombo.addItem(node.get_title(),node)
-
         # self.ctrl_hub.ui.pipeOptionCombo.currentIndexChanged.connect(self.option_tab_index_changed)
         # self.option_tab_index_changed(self.ctrl_hub.ui.pipeOptionCombo.currentIndex())
 
@@ -72,7 +67,7 @@ class PipelineNode:
     def __init__(self, pipe_hub: PipelineHub) -> None:
         self.pipe_hub = pipe_hub
         self.uuid=uuid.uuid1()
-        self.input_info=dict[str,(PipelineNode,str)]()
+        self.link_info=dict[str,Tuple[PipelineNode,str]]()
 
     def get_ins_name(self):
         return str(f"{self.name}_{self.uuid}")
@@ -110,6 +105,16 @@ class PipelineNode:
 
     def get_port_keys(self,input_port=True)->List[str]:
         pass
+
+    def set_link(self,out_ins:'PipelineNode',out_key:str,in_key:str):
+        if not isinstance(out_ins,PipelineNode):
+            return False
+        if out_key not in out_ins.get_port_keys(False):
+            return False
+        if in_key not in self.get_port_keys():
+            return False
+        self.link_info[in_key]=(out_ins,out_key)
+        return True
 
 
 

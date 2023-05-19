@@ -89,3 +89,4 @@ class PyTransEvent:
         NOP = auto()
         UI_UPDATE = auto()
         NODE_UPDATE = auto()
+        PIPELINE_RUN=auto()

@@ -8,6 +8,8 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 from enum import Enum,auto
 from typing import *
+
+from view.pipeline.pipe_link_edit import PipeLinkEditWidget
 if TYPE_CHECKING:
     from view.view_hub import ViewHub
 import utils as pytrans_utils
@@ -32,55 +34,57 @@ class PipelineViewhub:
         self.ui.PipeUpBtn.clicked.connect(lambda x:self.pipeline_edit(PipelineEditFlag.BRING_UP))
         self.ui.PipeDownBtn.clicked.connect(lambda x:self.pipeline_edit(PipelineEditFlag.BRING_DOWN))
         self.ui.PipeRemoveBtn.clicked.connect(lambda x:self.pipeline_edit(PipelineEditFlag.REMOVE_NODE))
+        self.ui.pipeOptionViewList.currentRowChanged.connect(self.pipe_option_changed)
         self.ui.pipeEditList.currentRowChanged.connect(self.pipe_edit_changed)
-
+        self.current_link_widget=PipeLinkEditWidget().bind(self)
 
     def pipeline_edit(self,flag:'PipelineEditFlag'):
-        pipelineList_widget=self.ui.pipeEditList
+        pipeEditList_widget=self.ui.pipeEditList
+        pipeline_node_ins_list=self.pipeline_ctrlhub.pipeline_node_ins
         if(flag not in PipelineEditFlag):
             return
+        curr_edit_listitem=pipeEditList_widget.currentItem()
+        curr_option_listitem=self.ui.pipeOptionViewList.currentItem()
+
         if(flag==PipelineEditFlag.ADD_NODE):
             curr_pipenode_cls:Type[PipelineNode]=self.ui.pipeAvaliableCombo.currentData()
             tmp_pipenode_cls=curr_pipenode_cls(self.pipeline_ctrlhub)
-            tmp_listwidget=QListWidgetItem(tmp_pipenode_cls.get_ins_name())
-            tmp_listwidget.setData(Qt.ItemDataRole.UserRole,tmp_pipenode_cls)
-            pipelineList_widget.addItem(tmp_listwidget)
-        elif(flag==PipelineEditFlag.BRING_UP):
-            curr_row=pipelineList_widget.currentRow()
-            if(curr_row==None):
+            pipeline_node_ins_list.append(tmp_pipenode_cls)
+        else:
+            if(curr_edit_listitem==None):
                 return
-            curr_data=pipelineList_widget.item(curr_row)
-            prev_data=pipelineList_widget.item(curr_row-1)
-            if(curr_data==None or prev_data==None):
-                return
-            pipelineList_widget.takeItem(curr_row-1)
-            pipelineList_widget.takeItem(curr_row-1)
-            pipelineList_widget.insertItem(curr_row-1,prev_data)
-            pipelineList_widget.insertItem(curr_row-1,curr_data)
-            pipelineList_widget.setCurrentRow(curr_row-1)
-        elif(flag==PipelineEditFlag.BRING_DOWN):
-            curr_row=pipelineList_widget.currentRow()
-            if(curr_row==None):
-                return
-            curr_data=pipelineList_widget.item(curr_row)
-            next_data=pipelineList_widget.item(curr_row+1)
-            if(curr_data==None or next_data==None):
-                return
-            pipelineList_widget.takeItem(curr_row)
-            pipelineList_widget.takeItem(curr_row)
-            pipelineList_widget.insertItem(curr_row,curr_data)
-            pipelineList_widget.insertItem(curr_row,next_data)
-            pipelineList_widget.setCurrentRow(curr_row+1)
-        elif(flag==PipelineEditFlag.REMOVE_NODE):
-            curr_row=pipelineList_widget.currentRow()
-            if(curr_row==None):
-                return
-            pipelineList_widget.takeItem(curr_row)
+            curr_ins:PipelineNode=pipeEditList_widget.currentItem().data(Qt.ItemDataRole.UserRole)
+            assert curr_ins in pipeline_node_ins_list
+            if(flag==PipelineEditFlag.REMOVE_NODE):
+                pipeline_node_ins_list.remove(curr_ins)
+            elif(flag==PipelineEditFlag.BRING_UP):
+                curr_index=pipeline_node_ins_list.index(curr_ins)
+                pytrans_utils.swap_list_item(pipeline_node_ins_list,curr_index,curr_index-1)
+            elif(flag==PipelineEditFlag.BRING_DOWN):
+                curr_index=pipeline_node_ins_list.index(curr_ins)
+                pytrans_utils.swap_list_item(pipeline_node_ins_list,curr_index,curr_index+1)
 
-    def pipe_edit_changed(self,row:int):
+        def index_from_item(item:QListWidgetItem):
+            ins=None if item==None else item.data(Qt.ItemDataRole.UserRole)
+            return -1 if ins not in pipeline_node_ins_list else pipeline_node_ins_list.index(ins)
+
+        curr_edit_index=index_from_item(curr_edit_listitem)
+        curr_option_index=index_from_item(curr_option_listitem)
+
+        self.ui.pipeEditList.clear()
+        self.ui.pipeOptionViewList.clear()
+        for item in pipeline_node_ins_list:
+            tmp_listitem=QListWidgetItem(item.get_ins_name())
+            tmp_listitem.setData(Qt.ItemDataRole.UserRole,item)
+            self.ui.pipeEditList.addItem(tmp_listitem)
+            self.ui.pipeOptionViewList.addItem(QListWidgetItem(tmp_listitem))
+        self.ui.pipeEditList.setCurrentRow(curr_edit_index)
+        self.ui.pipeOptionViewList.setCurrentRow(curr_option_index)
+
+    def pipe_option_changed(self,row:int):
         pipe_option_con=self.ui.pipeOptionContainer
         pipe_node_option_con=self.ui.pipeOptionContainer
-        curr=self.ui.pipeEditList.currentItem()
+        curr=self.ui.pipeOptionViewList.currentItem()
         if(curr!=None):
             pipe_node:PipelineNode=curr.data(Qt.ItemDataRole.UserRole)
             pytrans_utils.qwidget_cleanup(pipe_option_con)
@@ -89,5 +93,8 @@ class PipelineViewhub:
         else:
             pytrans_utils.qwidget_cleanup(pipe_option_con)
             pytrans_utils.qwidget_cleanup(pipe_node_option_con)
+
+    def pipe_edit_changed(self,row:int):
+        link_edit_con=self.ui.pipeLinkEditCon
 
 
