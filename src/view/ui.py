@@ -524,7 +524,7 @@ class Ui_MainWindow(object):
         self.nodeTabC.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
-        self.pipeOptionTabC.setCurrentIndex(2)
+        self.pipeOptionTabC.setCurrentIndex(0)
         self.pipeMemoSelectTabC.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 

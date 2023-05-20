@@ -1,30 +1,28 @@
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from typing import *
 
+T=TypeVar("T",bound=QWidget)
 
-class FormItem(QFrame):
-    def setup(self, title: str, content: QWidget):
-        self.h_layout = QHBoxLayout(self)
-        self.title_label = QLabel(title, self)
-        self.content = content
-        self.content.setParent(self)
+class FormItem(QGroupBox):
+    def setup(self, title: str,layout:QLayout=None):
+        self.setTitle(title)
 
-        self.h_layout.addWidget(self.title_label)
-        self.h_layout.addWidget(self.content)
+        self.v_layout = QVBoxLayout()
+        self.setLayout(self.v_layout)
+        self.v_layout.setContentsMargins(2, 2, 2, 2)
+        # self.adjustSize()
+        # self.setStyleSheet('border:1px solid yellow')
 
-        self.title_label.setSizePolicy(
-            QSizePolicy(
-                QSizePolicy.Policy.Minimum,
-                QSizePolicy.Policy.Minimum
-            )
-        )
-        self.content.setSizePolicy(
-            QSizePolicy(
-                QSizePolicy.Policy.Expanding,
-                QSizePolicy.Policy.Minimum
-            )
-        )
-        self.h_layout.setContentsMargins(2, 2, 2, 2)
-        # self.setStyleSheet('border:1px solid red')
+        if isinstance(layout,QLayout):
+            layout.addWidget(self)
         return self
+
+    def set_content(self,content:T)->T:
+        self.v_layout.addWidget(content)
+        return content
+
+def add_to_layout(layout:QLayout,widget:T):
+    layout.addWidget(widget)
+    return widget

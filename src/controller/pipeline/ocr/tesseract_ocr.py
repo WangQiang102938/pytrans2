@@ -1,11 +1,10 @@
 from enum import Enum
-from typing import List
+from typing import Any, List
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-from PyQt6.QtWidgets import QWidget
 from PIL.Image import Image
-from controller.pipeline.pipeline_hub import PipeUpdateMode, PipelineHub, PipelineNode
+from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
 import utils.pipeline_utils as pipeline_utils
 import utils
@@ -14,6 +13,12 @@ import pytesseract
 class PortEnum(Enum):
     IN_IMAGE='input image'
     OUT_TEXT='output text'
+
+class Memo(PipeMemo):
+    def __init__(self, pipe_ins: PipelineNode) -> None:
+        super().__init__(pipe_ins)
+        self.image_in:Image=None
+        self.out_txt:str=None
 
 class TesseractOCR(PipelineNode):
     name="Tesseract OCR"
@@ -36,31 +41,41 @@ class TesseractOCR(PipelineNode):
             PortEnum.OUT_TEXT.value
             ]
 
-    def run_pipe(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
-        img=utils.safe_get_dict_key(input,PortEnum.IN_IMAGE.value,Image)
+    def process_capnode(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
+        if mode==PipeUpdateMode.BYPASS:
+            return True
+        memo=self.find_memo(node,Memo,True)
+        img=utils.safe_get_dict_val(input,PortEnum.IN_IMAGE.value,Image)
         if img==None:
             return False
+        memo.image_in=img
         lang_combo = self.widget.lang_select_combo
         ocr_result = pytesseract.image_to_string(
             img, lang=lang_combo.currentData())
-        print(ocr_result)
-        return super().run_pipe(node, mode, **input)
+        memo.out_txt=ocr_result
+        return True
+
+    def get_output(self, node: CaptureNode, key: str) -> Any:
+        memo=self.find_memo(node,Memo,False)
+        if key==PortEnum.OUT_TEXT.value:
+            return memo.out_txt
+        return None
 
 
 class TesseractWidget(QFrame):
     def bind(self):
-        self.main_layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout()
         # self.setStyleSheet("border:1px solid red")
+        self.setLayout(self.main_layout)
 
-        self.realtime_check = QCheckBox(self)
-        self.realtime_checkF = pipeline_utils.FormItem(self).setup(
-            'Realtime Update', self.realtime_check
-        )
+        self.realtime_check =pipeline_utils.FormItem(self).setup(
+            "",self.main_layout
+        ).set_content(QCheckBox("Realtiem Update"))
 
-        self.lang_select_combo = QComboBox(self)
-        self.lang_select_conboF = pipeline_utils.FormItem(self).setup(
-            "OCR Lang", self.lang_select_combo
-        )
+        self.lang_select_combo =pipeline_utils.FormItem(self).setup(
+            "OCR Lang",self.main_layout
+        ).set_content(QComboBox())
+
         self.lang_select_combo.setMaximumWidth(100)
         self.lang_select_combo.setMaxVisibleItems(10)
         self.lang_select_combo.setStyleSheet(
@@ -70,8 +85,6 @@ class TesseractWidget(QFrame):
             self.lang_select_combo.addItem(enum.name, enum.value)
         self.lang_select_combo.setCurrentText(TesseractLangEnum.English.name)
 
-        self.main_layout.addWidget(self.realtime_checkF)
-        self.main_layout.addWidget(self.lang_select_conboF)
         self.main_layout.addItem(QSpacerItem(
             20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         self.main_layout.setContentsMargins(2, 2, 2, 2)

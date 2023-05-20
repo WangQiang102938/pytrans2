@@ -1,3 +1,4 @@
+from enum import Enum
 from model.capture.capture_node import CaptureNode
 import utils.pipeline_utils as pipeline_utils
 import utils.preview_utils as preview_utils
@@ -46,9 +47,9 @@ def count_node(node:CaptureNode,count=0):
 
 T=TypeVar("T")
 
-def safe_get_dict_key(_dict,key,type:Type[T])->T:
+def safe_get_dict_val(_dict,key,type:Type[T])->T:
+    key = key.value if isinstance(key,Enum) else key
     if isinstance(_dict,dict) and key in _dict:
         val=_dict[key]
         return val if isinstance(val,type) else None
     return None
-

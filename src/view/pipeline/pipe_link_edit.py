@@ -57,7 +57,7 @@ class PipeLinkEditWidget(QFrame):
         self.main_layout.addItem(QSpacerItem(1,1,QSizePolicy.Policy.Minimum,QSizePolicy.Policy.Expanding))
 
 
-class PipeLinkItem(QWidget):
+class PipeLinkItem(QGroupBox):
     def bind(self,container:PipeLinkEditWidget,input_key:str):
         self.container=container
         self.input_key=input_key
@@ -65,11 +65,10 @@ class PipeLinkItem(QWidget):
         self.main_layout=QHBoxLayout(self)
         self.output_ins_combo=QComboBox(self)
         self.output_key_combo=QComboBox(self)
-        self.arrow_label=QLabel(f" -> {input_key}",self)
+        self.setTitle(input_key)
 
         self.main_layout.addWidget(self.output_ins_combo)
         self.main_layout.addWidget(self.output_key_combo)
-        self.main_layout.addWidget(self.arrow_label)
         self.main_layout.setContentsMargins(4,4,4,4)
 
         self.output_ins_combo.addItem('N/A','N/A')
@@ -80,7 +79,10 @@ class PipeLinkItem(QWidget):
             self.output_ins_combo.addItem(
                 ins.get_ins_name(),ins
             )
-        self.output_ins_combo.currentIndexChanged.connect(self.output_ins_changed)
+
+        self.output_ins_combo.activated.connect(self.output_ins_changed)
+        self.output_key_combo.activated.connect(self.output_key_changed)
+
         self.output_ins_combo.setMaximumWidth(100)
 
         rec_ins=self.get_rec_ins_key()[0]

@@ -78,27 +78,25 @@ class PipelineNode:
     def capnode_option_ui_setup(self,container:QWidget,node:CaptureNode=None):
         pass
 
-    def get_text_output(self,node:CaptureNode=None):
-        pass
-
-    def process_node(self, node: CaptureNode, dfs_mode=False,update_flag=False):
-        pass
-
-    def process_doc(self, doc: WorkingDoc, node: CaptureNode = None):
-        node = node if node != None else doc.root_node
-        for child in node.children:
-            self.process_doc(self, doc, child)
-        self.process_node(node, dfs_mode=True)
-
-    def find_my_memo(self,node:CaptureNode,cast_type:Type[T]=PipeMemo,)->T:
-        if (not isinstance(node,CaptureNode)
-            or self not in node.pipeline_memo):
+    def find_memo(self,node:CaptureNode,cast_type:Type[T]=PipeMemo,new_if_notfound=False)->T:
+        if (not isinstance(node,CaptureNode)):
             return None
+        if self not in node.pipeline_memo:
+            return cast_type(self).bind_node(node,True)
         val= node.pipeline_memo[self]
-        return val if isinstance(val,cast_type) else None
+        if isinstance(val,cast_type):
+            return val
+        else:
+            return cast_type(self).bind_node(node,True) if new_if_notfound else None
 
-    def run_pipe(self,node:CaptureNode,mode:PipeUpdateMode=PipeUpdateMode.BYPASS,**input):
+    def process_start(self):
+        pass
+
+    def process_capnode(self,node:CaptureNode,mode:PipeUpdateMode=PipeUpdateMode.BYPASS,**input):
         return False
+
+    def process_end(self):
+        pass
 
     def get_output(self,node:CaptureNode,key:str)-> Any:
         return None

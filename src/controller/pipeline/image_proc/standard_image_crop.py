@@ -25,12 +25,8 @@ class StandardCrop(PipelineNode):
     def option_ui_setup(self, container: QWidget):
         return super().option_ui_setup(container)
 
-    def run_pipe(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
-        if mode==PipeUpdateMode.BYPASS:
-            return
-        memo=self.find_my_memo(node,Memo)
-        memo=memo if memo is not None else Memo(self).bind_node(node,overwrite_flag=True)
-
+    def process_capnode(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
+        memo=self.find_memo(node,Memo,True)
         visual_memo = node.get_visual_memo()
 
         if visual_memo==None:
@@ -47,7 +43,7 @@ class StandardCrop(PipelineNode):
         memo.croped_image=node_img
 
     def get_output(self, node: CaptureNode, key: str):
-        memo=self.find_my_memo(node,Memo)
+        memo=self.find_memo(node,Memo)
         if(key==PortEnum.OUT_IMAGE.value and memo !=None):
             return memo.croped_image
         return super().get_output(node, key)

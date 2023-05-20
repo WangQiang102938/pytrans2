@@ -44,6 +44,17 @@ class PyTransApp:
         self.controller_hub.io_hub.open_doc(
             LocalPDFOpener('./test.pdf')
         )
+        pipeline=[
+            "Standard Crop",
+            "Tesseract OCR",
+            "StdFormatter",
+            'Google Translate'
+        ]
+        for item in pipeline:
+            self.ui.pipeAvaliableCombo.setCurrentText(item)
+            self.ui.PipeAddBtn.click()
+            self.app.processEvents()
+
         return
 
     def g_resize_call(self, event: QResizeEvent):

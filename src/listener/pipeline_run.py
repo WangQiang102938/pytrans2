@@ -33,11 +33,13 @@ class DefaultPipelineRunListener(Listener):
                 input_dict={}
                 for in_key,(out_ins,out_key) in pipenode.link_info.items():
                     input_dict[in_key]=out_ins.get_output(node,out_key)
-                pipenode.run_pipe(node,PipeUpdateMode.FULLY_RUN,**input_dict)
+                pipenode.process_capnode(node,PipeUpdateMode.FULLY_RUN,**input_dict)
                 ui.pipeCapNodeProgress.setValue(count+1)
                 process_events()
                 return count+1
+            pipenode.process_start()
             dfs(working_doc.root_node)
+            pipenode.process_end()
             ui.pipeProgress.setValue(p_i+1)
         self.main.mainwindow.setEnabled(True)
 
