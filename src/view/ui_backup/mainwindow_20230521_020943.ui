@@ -87,13 +87,7 @@
          <property name="flat">
           <bool>false</bool>
          </property>
-         <layout class="QGridLayout" name="gridLayout_21" columnstretch="0">
-          <property name="horizontalSpacing">
-           <number>-1</number>
-          </property>
-          <property name="verticalSpacing">
-           <number>0</number>
-          </property>
+         <layout class="QGridLayout" name="gridLayout_21">
           <item row="2" column="0">
            <widget class="QGroupBox" name="groupBox_4">
             <property name="sizePolicy">
@@ -119,9 +113,9 @@
               <number>4</number>
              </property>
              <item>
-              <widget class="QToolButton" name="captureCreateBtn">
+              <widget class="QToolButton" name="toolButton_7">
                <property name="text">
-                <string>Create</string>
+                <string>Drag</string>
                </property>
                <property name="checkable">
                 <bool>true</bool>
@@ -129,7 +123,37 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="captureSelectCombo"/>
+              <widget class="QToolButton" name="toolButton_6">
+               <property name="text">
+                <string>Text</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_4">
+               <property name="text">
+                <string>Image</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="arrowType">
+                <enum>Qt::NoArrow</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_8">
+               <property name="text">
+                <string>Formula</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <spacer name="horizontalSpacer_6">
@@ -145,7 +169,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QToolButton" name="captureDelBtn">
+              <widget class="QToolButton" name="toolButton_5">
                <property name="text">
                 <string>Del</string>
                </property>
@@ -156,9 +180,11 @@
              </item>
             </layout>
             <zorder>horizontalSpacer_6</zorder>
-            <zorder>captureDelBtn</zorder>
-            <zorder>captureCreateBtn</zorder>
-            <zorder>captureSelectCombo</zorder>
+            <zorder>toolButton_5</zorder>
+            <zorder>toolButton_6</zorder>
+            <zorder>toolButton_4</zorder>
+            <zorder>toolButton_8</zorder>
+            <zorder>toolButton_7</zorder>
            </widget>
           </item>
           <item row="1" column="0">
@@ -696,38 +722,6 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_6">
     <layout class="QGridLayout" name="gridLayout_22">
-     <item row="2" column="0">
-      <widget class="QWidget" name="widget_4" native="true">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QPushButton" name="pipeRunNodeBtn">
-          <property name="text">
-           <string>Run Node</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pipeRunBtn">
-          <property name="text">
-           <string>Run All</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QFrame" name="frame">
        <property name="frameShape">
@@ -784,6 +778,13 @@
          </widget>
         </item>
        </layout>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="pipeRunBtn">
+       <property name="text">
+        <string>Run</string>
+       </property>
       </widget>
      </item>
      <item row="0" column="0">

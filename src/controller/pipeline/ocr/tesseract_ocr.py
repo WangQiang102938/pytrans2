@@ -70,11 +70,11 @@ class TesseractWidget(QFrame):
 
         self.realtime_check =pipeline_utils.FormItem(self).setup(
             "",self.main_layout
-        ).set_content(QCheckBox("Realtiem Update"))
+        ).add_content(QCheckBox("Realtiem Update"))
 
         self.lang_select_combo =pipeline_utils.FormItem(self).setup(
             "OCR Lang",self.main_layout
-        ).set_content(QComboBox())
+        ).add_content(QComboBox())
 
         self.lang_select_combo.setMaximumWidth(100)
         self.lang_select_combo.setMaxVisibleItems(10)

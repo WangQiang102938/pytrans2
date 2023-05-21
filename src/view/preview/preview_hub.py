@@ -38,8 +38,7 @@ class PreviewHub:
         self.working_status_checking()
 
     def add_capture_box(self, left, top, right, bottom):
-        # TODO: COMPLETE THIS
-        tmp_node = self.working_doc.curr_node_cls().link_parent(
+        tmp_node = CaptureNode(self.working_doc).link_parent(
             self.working_doc.focus_node
         )
         tmp_node.set_visual_memo(

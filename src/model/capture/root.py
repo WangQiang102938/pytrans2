@@ -10,7 +10,7 @@ class RootNode(CaptureNode):
         self.parent=doc
         self.working_doc=doc
 
-    def node_type(self):
+    def get_node_type(self):
         return self.Type.ROOT
 
     def get_visual_memo(self):

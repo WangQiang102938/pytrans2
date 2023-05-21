@@ -32,27 +32,26 @@ class GoogleTranslateWidget(QFrame):
 
         self.api_key_edit= FormItem(self).setup(
             'Api Key',self.main_layout
-        ).set_content(QLineEdit())
-        self.api_key_edit.setText("AIzaSyChnruvHGwwc9s0svK9HgTQd1TL_hG0anQ")
+        ).add_content(QLineEdit())
 
         self.char_limit_edit= FormItem(self).setup(
             'Max chars size',self.main_layout
-        ).set_content(QSpinBox())
+        ).add_content(QSpinBox())
         self.char_limit_edit.setRange(10,100000)
         self.char_limit_edit.setValue(5000)
 
         self.src_lang_combo= FormItem(self).setup(
             'Source Language',self.main_layout
-        ).set_content(QComboBox())
+        ).add_content(QComboBox())
 
         self.tar_lang_combo= FormItem(self).setup(
             'Target Language',self.main_layout
-        ).set_content(QComboBox())
+        ).add_content(QComboBox())
 
 
         self.print_output= FormItem(self).setup(
             'Print result to console',self.main_layout
-        ).set_content(QCheckBox())
+        ).add_content(QCheckBox())
 
         self.main_layout.addItem(QSpacerItem(0,0,
             QSizePolicy.Policy.Minimum,

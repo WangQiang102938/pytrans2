@@ -24,7 +24,7 @@ class PageItem(QGraphicsPixmapItem):
         self.setSelected(True)
         for item in self.childItems():
             item.setSelected(False)
-        if(True):  # TODO:MODE SELECT
+        if(self.preview_hub.view_hub.ui.captureCreateBtn.isChecked()):  # TODO:MODE SELECT
             self.start_pos = event.pos()
             self.end_pos = event.pos()
             self.creating_box = QGraphicsRectItem(
@@ -35,6 +35,8 @@ class PageItem(QGraphicsPixmapItem):
                 ), self
             )
             preview_utils.update_box_preview(self.preview_hub,self.creating_box.rect(),True)
+        else:
+            event.setAccepted(False)
 
     def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self.end_pos = event.pos()

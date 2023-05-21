@@ -4,16 +4,25 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.doc import WorkingDoc
-
+class CapNodeType(Enum):
+    RAW = auto()
+    ROOT = auto()
+    CONTAINER = auto()
+    TEXT = auto()
+    IMAGE = auto()
+    STRUCTURE=auto()
 
 class CaptureNode:
-    def __init__(self) -> None:
+    Type=CapNodeType
+
+    def __init__(self,working_doc:'WorkingDoc',node_type:CapNodeType=CapNodeType.RAW) -> None:
         self.parent: CaptureNode = None
         self.children = list[CaptureNode]()
         self.kwargs = dict()
         self.visual_memo: CaptureNode.VisualMemo = None
-        self.working_doc: WorkingDoc = None
+        self.working_doc: WorkingDoc = working_doc
         self.pipeline_memo = dict()
+        self.node_type=node_type
 
     def link_parent(self, parent: 'CaptureNode'):
         self.parent = parent
@@ -28,8 +37,8 @@ class CaptureNode:
         child.link_parent(self)
         return self
 
-    def node_type(self):
-        return self.Type.NOT_IMPLIMENTED
+    def get_node_type(self):
+        return self.node_type
 
     def get_visual_memo(self):
         return self.visual_memo
@@ -37,13 +46,7 @@ class CaptureNode:
     def set_visual_memo(self, info: 'VisualMemo'):
         self.visual_memo = info
 
-    class Type(Enum):
-        NOT_IMPLIMENTED = auto()
-        ROOT = auto()
-        CONTAINER = auto()
-        TEXT = auto()
-        IMAGE = auto()
-        STRUCTURE=auto()
+
 
     class VisualMemo:
         def __init__(self, left: float, top: float, right: float, bottom: float, page_no: int, *args, **kwargs) -> None:

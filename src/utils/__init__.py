@@ -2,7 +2,7 @@ from enum import Enum
 from model.capture.capture_node import CaptureNode
 import utils.pipeline_utils as pipeline_utils
 import utils.preview_utils as preview_utils
-import random
+import random,os,sys
 
 import PyQt6.sip as sip
 from PyQt6.QtCore import *
@@ -53,3 +53,29 @@ def safe_get_dict_val(_dict,key,type:Type[T])->T:
         val=_dict[key]
         return val if isinstance(val,type) else None
     return None
+
+def qt_file_io(
+        file_mode:QFileDialog.FileMode=QFileDialog.FileMode.Directory,
+        title:str=None,
+        side_paths:list[str]=[]
+    ):
+    title= file_mode.name if title!=None else title
+
+    file_dialog=QFileDialog()
+    file_dialog.setWindowTitle(title)
+    file_dialog.setFileMode(file_mode)
+    file_dialog.setOption(file_dialog.Option.DontUseNativeDialog)
+
+    file_dialog.setSidebarUrls(
+        [QUrl.fromLocalFile(x) for x in side_paths]+[
+        QUrl.fromLocalFile(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.DesktopLocation)[0]),
+        QUrl.fromLocalFile(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.DocumentsLocation)[0]),
+        QUrl.fromLocalFile(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.HomeLocation)[0]),
+    ])
+
+    if(file_dialog.exec()):
+        return file_dialog.selectedFiles()
+    else:
+        return None
+
+

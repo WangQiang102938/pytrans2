@@ -32,6 +32,7 @@ class PipeLinkEditWidget(QFrame):
         # self.setStyleSheet("border:1px solid red")
 
         self.container.setLayout(QVBoxLayout())
+        self.container.layout().setContentsMargins(0,0,0,0)
         self.container.layout().addWidget(self)
         self.current_ins_changed(-1)
         self.working_pipelist_widget.currentItemChanged.connect(self.current_ins_changed)
@@ -46,10 +47,19 @@ class PipeLinkEditWidget(QFrame):
 
     def current_ins_changed(self,row:int):
         # Cleanup layout
-        while self.main_layout.itemAt(0)!=None:
-            QObjectCleanupHandler().add(self.main_layout.itemAt(0).widget())
-            self.main_layout.removeItem(self.main_layout.itemAt(0))
+        # while self.main_layout.itemAt(0)!=None:
+        #     QObjectCleanupHandler().add(self.main_layout.itemAt(0).widget())
+        #     self.main_layout.removeItem(self.main_layout.itemAt(0))
+        for item in self.children():
+            QObjectCleanupHandler().add(item)
         current_ins=self.get_current_ins()
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0,0,0,0)
+
+        scroll_area=QScrollArea(self)
+        self.layout().addWidget(scroll_area)
+        scroll_area.setLayout(QVBoxLayout())
+        self.main_layout=scroll_area.layout()
         if current_ins==None:
             return
         for key in current_ins.get_port_keys(input_port=True):
@@ -89,6 +99,7 @@ class PipeLinkItem(QGroupBox):
         if(rec_ins!=None):
             index=self.output_ins_combo.findData(rec_ins)
             self.output_ins_combo.setCurrentIndex(index)
+            self.output_ins_changed(0)
         return self
 
     def get_rec_ins_key(self):
