@@ -6,7 +6,7 @@ from view.preview.capture_box import CaptureBoxItem
 from view.preview.page import PageItem
 from PIL.Image import Image
 from PyQt6.QtGui import *
-import utils as PyTransUtils
+import my_utils as PyTransUtils
 
 class DefaultPipelineRunListener(Listener):
     def listened_event(self, event: PyTransEvent) -> bool:

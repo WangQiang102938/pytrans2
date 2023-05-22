@@ -58,7 +58,7 @@ class PyTransApp:
             self.ui.PipeAddBtn.click()
             self.app.processEvents()
             ins[item]=self.ui.pipeEditList.item(i).data(Qt.ItemDataRole.UserRole)
-        from src.controller.pipeline.translator.google_app_script.google_trans import GoogleTranslate
+        from controller.pipeline.translator.google_app_script.google_trans import GoogleTranslate
         google_trans_ins:GoogleTranslate=ins['Google Translate']
         google_trans_ins.option_widget.api_key_edit.setText("AIzaSyChnruvHGwwc9s0svK9HgTQd1TL_hG0anQ")
         ins["Tesseract OCR"].link_info['input image']=(ins["Standard Crop"],'Image out')

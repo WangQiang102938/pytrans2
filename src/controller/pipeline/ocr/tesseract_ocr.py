@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import *
 from PIL.Image import Image
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import utils.pipeline_utils as pipeline_utils
-import utils
+import my_utils.pipeline_utils as pipeline_utils
+import my_utils
 import pytesseract
 
 class PortEnum(Enum):
@@ -45,7 +45,7 @@ class TesseractOCR(PipelineNode):
         if mode==PipeUpdateMode.BYPASS:
             return True
         memo=self.find_memo(node,Memo,True)
-        img=utils.safe_get_dict_val(input,PortEnum.IN_IMAGE.value,Image)
+        img=my_utils.safe_get_dict_val(input,PortEnum.IN_IMAGE.value,Image)
         if img==None:
             return False
         memo.image_in=img

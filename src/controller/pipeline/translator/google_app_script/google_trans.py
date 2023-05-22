@@ -7,9 +7,9 @@ from PIL.Image import Image
 from PyQt6.QtWidgets import QWidget
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import utils.pipeline_utils as pipeline_utils
-import utils
-from utils.pipeline_utils import FormItem,add_to_layout
+import my_utils.pipeline_utils as pipeline_utils
+import my_utils
+from my_utils.pipeline_utils import FormItem,add_to_layout
 import http.client
 from urllib.parse import urlencode
 import json
@@ -88,7 +88,7 @@ class GoogleTranslate(PipelineNode):
 
     def process_capnode(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
         memo=self.find_memo(node,Memo,True)
-        text_in=utils.safe_get_dict_val(input,PortEnum.IN_TEXT,list)
+        text_in=my_utils.safe_get_dict_val(input,PortEnum.IN_TEXT,list)
         if text_in==None:
             return
         try:

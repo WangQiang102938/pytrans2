@@ -24,3 +24,21 @@ class OpenModule:
 
     def set_callback(self,callback:Callable[[float,float],None]):
         self.callback=callback
+
+# class IOModule:
+#     def __init__(self, io_hub: IOHub) -> None:
+#         self.io_hub = io_hub
+#         self.callback: Callable[[float, float], None] = None
+
+#     def open(self,working_doc:WorkingDoc) -> bool:
+#         return False
+
+#     def set_callback(self, callback: Callable[[float, float], None]):
+#         self.callback = callback
+
+#     def get_pdf_path(self, working_doc:WorkingDoc):
+#         return None
+
+# class IOMemo:
+#     def __init__(self,module:IOModule) -> None:
+#         self.io_module=module

@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QWidget
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from enum import Enum,auto
 from PIL.Image import Image
-import utils.preview_utils as preview_utils
+import my_utils.preview_utils as preview_utils
 from model.capture.capture_node import CaptureNode
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *

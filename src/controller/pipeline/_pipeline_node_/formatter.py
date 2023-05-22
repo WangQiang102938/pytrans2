@@ -7,8 +7,8 @@ from PyQt6.QtWidgets import QWidget
 from PIL.Image import Image
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import utils.pipeline_utils as pipeline_utils
-import utils
+import my_utils.pipeline_utils as pipeline_utils
+import my_utils
 from nltk.tokenize.punkt import PunktSentenceTokenizer,PunktParameters
 
 class PortEnum(Enum):
@@ -51,7 +51,7 @@ class StandardFormatter(PipelineNode):
 
     def process_capnode(self, node: CaptureNode, mode: PipeUpdateMode = PipeUpdateMode.BYPASS, **input):
         memo=self.find_memo(node,Memo,True)
-        txt_in=utils.safe_get_dict_val(input,PortEnum.IN_TEXT.value,str)
+        txt_in=my_utils.safe_get_dict_val(input,PortEnum.IN_TEXT.value,str)
         if txt_in==None:
             return None
         sections=list[str]()

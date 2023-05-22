@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import QGraphicsItem, QGraphicsSceneMouseEvent, QStyleOptio
 from listener.listener_hub import PyTransEvent
 
 from model.capture.capture_node import CaptureNode
-import utils.preview_utils as preview_utils
+import my_utils.preview_utils as preview_utils
 
 if TYPE_CHECKING:
     from view.preview.preview_hub import PreviewHub

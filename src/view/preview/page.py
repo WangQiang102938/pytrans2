@@ -8,7 +8,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 import view.preview.preview_hub as preview_hub_m
-import utils.preview_utils as preview_utils
+import my_utils.preview_utils as preview_utils
 
 
 class PageItem(QGraphicsPixmapItem):

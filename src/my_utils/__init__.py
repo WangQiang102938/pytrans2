@@ -1,7 +1,7 @@
 from enum import Enum
 from model.capture.capture_node import CaptureNode
-import utils.pipeline_utils as pipeline_utils
-import utils.preview_utils as preview_utils
+import my_utils.pipeline_utils as pipeline_utils
+import my_utils.preview_utils as preview_utils
 import random,os,sys
 
 import PyQt6.sip as sip

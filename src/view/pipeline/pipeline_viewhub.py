@@ -12,7 +12,7 @@ from typing import *
 from view.pipeline.pipe_link_edit import PipeLinkEditWidget
 if TYPE_CHECKING:
     from view.view_hub import ViewHub
-import utils as pytrans_utils
+import my_utils as pytrans_utils
 
 
 class PipelineEditFlag(Enum):

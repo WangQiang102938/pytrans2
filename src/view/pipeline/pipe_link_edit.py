@@ -3,7 +3,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from controller.pipeline.pipeline_hub import PipelineNode
-import utils as pytrans_utils
+import my_utils as pytrans_utils
 import os
 import sys
 import importlib

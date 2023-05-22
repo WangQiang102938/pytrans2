@@ -2,7 +2,7 @@ from enum import Enum, auto
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-import utils as pytrans_utils
+import my_utils as pytrans_utils
 import os
 import sys
 import importlib

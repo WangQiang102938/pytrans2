@@ -7,8 +7,8 @@ from PIL.Image import Image
 from PyQt6.QtWidgets import QWidget
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import utils.pipeline_utils as pipeline_utils
-import utils
+import my_utils.pipeline_utils as pipeline_utils
+import my_utils
 import os,sys,shutil
 
 class PortEnum(Enum):
@@ -94,9 +94,9 @@ class HtmlGenV1(PipelineNode):
                 for node in memo.html_txts:
                     print(node)
 
-        image=utils.safe_get_dict_val(input,PortEnum.IN_IMAGE,Image)
-        origin_txt:list[list[str]]=utils.safe_get_dict_val(input,PortEnum.IN_ORIGIN,list)
-        trans_txt:list[list[str]]=utils.safe_get_dict_val(input,PortEnum.IN_TRANS,list)
+        image=my_utils.safe_get_dict_val(input,PortEnum.IN_IMAGE,Image)
+        origin_txt:list[list[str]]=my_utils.safe_get_dict_val(input,PortEnum.IN_ORIGIN,list)
+        trans_txt:list[list[str]]=my_utils.safe_get_dict_val(input,PortEnum.IN_TRANS,list)
 
         if(image==None):
             return
@@ -171,7 +171,7 @@ class HtmlGenV1(PipelineNode):
         working_doc=self.pipe_hub.ctrl_hub.main.model_hub.working_doc
         memo=self.find_memo(working_doc.root_node,Memo)
         title=memo.title
-        paths=utils.qt_file_io(title="Save To ...",side_paths=[os.getcwd()])
+        paths=my_utils.qt_file_io(title="Save To ...",side_paths=[os.getcwd()])
         for path in paths:
             if os.path.isfile(path):
                 continue
