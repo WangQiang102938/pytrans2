@@ -16,7 +16,7 @@ class ModelHub:
         self.opened_docs.append(doc)
         if not background:
             self.working_doc=doc
-            self.main.listener_hub.event_inqueue(
+            self.main.listener_hub.post_event(
                 PyTransEvent(PyTransEvent.Type.UI_UPDATE)
             )
 

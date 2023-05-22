@@ -50,7 +50,7 @@ class PreviewHub:
                 page_no=self.working_doc.page_no
             )
         )
-        self.view_hub.main.listener_hub.event_inqueue(
+        self.view_hub.main.listener_hub.post_event(
             PyTransEvent(PyTransEvent.Type.UI_UPDATE)
         )
 
@@ -74,7 +74,7 @@ class PreviewHub:
             self.working_doc.page_no -= 1
         self.working_doc.page_no = max(
             0, min(self.working_doc.page_cache.__len__()-1, self.working_doc.page_no))
-        self.view_hub.main.listener_hub.event_inqueue(
+        self.view_hub.main.listener_hub.post_event(
             PyTransEvent(PyTransEvent.Type.UI_UPDATE)
         )
 

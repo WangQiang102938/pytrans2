@@ -49,6 +49,8 @@ class IOModule:
     def get_title(self):
         return self.__class__.__name__
 
+    def gen_doc_title(self, working_doc: WorkingDoc):
+        return "NO TITLE"
 
 class IOMemo:
     def __init__(self, module: IOModule) -> None:

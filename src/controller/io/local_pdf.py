@@ -66,6 +66,12 @@ class LocalPDFModule(IOModule):
         except Exception as e:
             return None
 
+    def gen_doc_title(self, working_doc: WorkingDoc):
+        if not isinstance(working_doc.io_memo,ModuleMemo):
+            return super().gen_doc_title(working_doc)
+        memo=working_doc.io_memo
+        return f"{my_utils.split_filename(memo.path)} @ {id(memo)}"
+
 
 class ModuleWidget(QFrame):
     def bind(self, module: LocalPDFModule):

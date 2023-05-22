@@ -131,7 +131,7 @@ class CaptureBoxItem(QGraphicsRectItem):
     def delete_me(self):
         parent_node = self.capture_node.parent
         parent_node.children.remove(self.capture_node)
-        self.preview_hub.view_hub.main.listener_hub.event_inqueue(
+        self.preview_hub.view_hub.main.listener_hub.post_event(
             PyTransEvent(PyTransEvent.Type.UI_UPDATE)
         )
 

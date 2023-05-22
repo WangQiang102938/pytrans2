@@ -54,3 +54,6 @@ def scan_class(path:str,cls:Type[T],exclude_cmp_cls=True)->list[Type[T]]:
 
 def split_dir_from_file(filepath:str):
     return os.path.split(filepath)[0]
+
+def split_filename(filepath:str):
+    return os.path.splitext(os.path.split(filepath)[1])[0]

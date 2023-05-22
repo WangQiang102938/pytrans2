@@ -36,19 +36,21 @@ class DefaultUIUpdate(Listener):
         for item in preview_hub.scene.items():
             preview_hub.scene.removeItem(item)
         preview_hub.working_doc = working_doc
-        if(not preview_hub.working_status_checking()):
-            return
-        preview_hub.page_indic_update()
-        # page
-        page_img = working_doc.page_cache[working_doc.page_no]
-        preview_hub.page_item = PageItem(PIL2QPixmap(page_img), None).bind(preview_hub)
-        preview_hub.scene.addItem(preview_hub.page_item)
-        # capture node
-        root_node = working_doc.root_node
-        render_nodes = find_render_node(root_node,working_doc.page_no)
-        for item in render_nodes:
-            CaptureBoxItem(preview_hub.page_item).bind(preview_hub, item)
-        preview_hub.working_status_checking()
+        if( preview_hub.working_status_checking()):
+            preview_hub.page_indic_update()
+            # page
+            page_img = working_doc.page_cache[working_doc.page_no]
+            preview_hub.page_item = PageItem(PIL2QPixmap(page_img), None).bind(preview_hub)
+            preview_hub.scene.addItem(preview_hub.page_item)
+            # capture node
+            root_node = working_doc.root_node
+            render_nodes = find_render_node(root_node,working_doc.page_no)
+            for item in render_nodes:
+                CaptureBoxItem(preview_hub.page_item).bind(preview_hub, item)
+            preview_hub.working_status_checking()
+        # working doc
+        self.main.view_hub.io_viewhub.update_opened_doc()
+
         return super().event_handler(event)
 
 
