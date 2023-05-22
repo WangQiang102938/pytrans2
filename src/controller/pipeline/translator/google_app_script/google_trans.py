@@ -7,9 +7,9 @@ from PIL.Image import Image
 from PyQt6.QtWidgets import QWidget
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import my_utils.pipeline_utils as pipeline_utils
+import my_utils.qt_utils as qt_utils
 import my_utils
-from my_utils.pipeline_utils import FormItem,add_to_layout
+from my_utils.qt_utils import FormItem,add_to_layout
 import http.client
 from urllib.parse import urlencode
 import json

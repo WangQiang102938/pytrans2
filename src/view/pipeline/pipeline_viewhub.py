@@ -8,6 +8,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 from enum import Enum,auto
 from typing import *
+import my_utils.qt_utils
 
 from view.pipeline.pipe_link_edit import PipeLinkEditWidget
 if TYPE_CHECKING:
@@ -88,12 +89,12 @@ class PipelineViewhub:
         curr=self.ui.pipeOptionViewList.currentItem()
         if(curr!=None):
             pipe_node:PipelineNode=curr.data(Qt.ItemDataRole.UserRole)
-            my_utils.qwidget_cleanup(pipe_option_con)
+            my_utils.qt_utils.qwidget_cleanup(pipe_option_con)
             self.ui.pipeOptionTab.layout().addWidget(pipe_option_con)
             pipe_node.option_ui_setup(pipe_option_con)
         else:
-            my_utils.qwidget_cleanup(pipe_option_con)
-            my_utils.qwidget_cleanup(pipe_node_option_con)
+            my_utils.qt_utils.qwidget_cleanup(pipe_option_con)
+            my_utils.qt_utils.qwidget_cleanup(pipe_node_option_con)
 
     def pipe_edit_changed(self,row:int):
         pass

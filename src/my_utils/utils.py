@@ -9,23 +9,6 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from typing import *
 
-def qwidget_cleanup(widget:QWidget):
-    for child in widget.children():
-        if(isinstance(child,QLayout)):
-            layout:QLayout=child
-            rev_item_i_list=list(range(layout.count())).reverse()
-            while True:
-                item=layout.takeAt(0)
-                if item==None:
-                    break
-                layout.removeItem(item)
-                if item.widget():
-                    widget.setParent(None)
-            QObjectCleanupHandler().add(layout)
-        else:
-            child.setParent(None)
-
-
 def swap_list_item(swap_list:list,a_i:int,b_i:int):
     if a_i>b_i:
         tmp=a_i
@@ -53,30 +36,6 @@ def safe_get_dict_val(_dict,key,type:Type[T])->T:
         return val if isinstance(val,type) else None
     return None
 
-def qt_file_io(
-        file_mode:QFileDialog.FileMode=QFileDialog.FileMode.Directory,
-        title:str=None,
-        side_paths:list[str]=[]
-    ):
-    title= file_mode.name if title!=None else title
-
-    file_dialog=QFileDialog()
-    file_dialog.setWindowTitle(title)
-    file_dialog.setFileMode(file_mode)
-    file_dialog.setOption(file_dialog.Option.DontUseNativeDialog)
-
-    file_dialog.setSidebarUrls(
-        [QUrl.fromLocalFile(x) for x in side_paths]+[
-        QUrl.fromLocalFile(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.DesktopLocation)[0]),
-        QUrl.fromLocalFile(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.DocumentsLocation)[0]),
-        QUrl.fromLocalFile(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.HomeLocation)[0]),
-    ])
-
-    if(file_dialog.exec()):
-        return file_dialog.selectedFiles()
-    else:
-        return None
-
 def scan_class(path:str,cls:Type[T],exclude_cmp_cls=True)->list[Type[T]]:
     cls_list=[]
     sys.path.append(path) if path not in sys.path else None
@@ -88,7 +47,10 @@ def scan_class(path:str,cls:Type[T],exclude_cmp_cls=True)->list[Type[T]]:
             module = SourceFileLoader(filename, f"{root}/{file}").load_module()
             for clsname, obj in inspect.getmembers(module, inspect.isclass):
                 if issubclass(obj, cls):
-                    if(obj==cls and not exclude_cmp_cls):
+                    if(obj==cls and exclude_cmp_cls):
                         continue
                     cls_list.append(obj)
     return cls_list
+
+def split_dir_from_file(filepath:str):
+    return os.path.split(filepath)[0]

@@ -1,7 +1,7 @@
 from view.view_hub import ViewHub
 from controller.controller_hub import ControllerHub
 from typing import TYPE_CHECKING, Callable
-from controller.io.local_pdf import LocalPDFOpener
+from controller.io.local_pdf import LocalPDFModule
 from model.data_hub import ModelHub
 from listener.listener_hub import ListenerHub
 from view.ui import Ui_MainWindow
@@ -41,9 +41,7 @@ class PyTransApp:
         self.app.exec()
 
     def debug_call(self):
-        self.controller_hub.io_hub.open_doc(
-            LocalPDFOpener('./test.pdf')
-        )
+        # LocalPDFModule.valid_ins.open('test.pdf')
         pipeline=[
             "Standard Crop",
             "Tesseract OCR",

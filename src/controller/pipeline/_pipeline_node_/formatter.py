@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QWidget
 from PIL.Image import Image
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import my_utils.pipeline_utils as pipeline_utils
+import my_utils.qt_utils as qt_utils
 import my_utils
 from nltk.tokenize.punkt import PunktSentenceTokenizer,PunktParameters
 

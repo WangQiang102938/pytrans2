@@ -7,7 +7,7 @@ from PIL.Image import Image
 from PyQt6.QtWidgets import QWidget
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import my_utils.pipeline_utils as pipeline_utils
+import my_utils.qt_utils as qt_utils
 import my_utils
 import os,sys,shutil
 
@@ -35,22 +35,22 @@ class HtmlGenWidget(QFrame):
         main_layout=self.main_layout=QVBoxLayout()
         self.setLayout(main_layout)
 
-        self.save_btn,save_con=pipeline_utils.FormItem(self).setup(
+        self.save_btn,save_con=qt_utils.FormItem(self).setup(
             "File",main_layout
         ).add_content_chain(QPushButton("Save"))
         self.open_after_save_check=save_con.add_content(QCheckBox("Open after saved"))
 
-        self.image_ext_combo=pipeline_utils.FormItem(self).setup(
+        self.image_ext_combo=qt_utils.FormItem(self).setup(
             "Image Type",main_layout
         ).add_content(QComboBox())
         for item in ImageExt:
             self.image_ext_combo.addItem(item.name,item.value)
 
-        self.print_check=pipeline_utils.FormItem(self).setup(
+        self.print_check=qt_utils.FormItem(self).setup(
             "",main_layout
         ).add_content(QCheckBox("Print html"))
 
-        self.main_layout.addItem(pipeline_utils.gen_vert_spacer())
+        self.main_layout.addItem(qt_utils.gen_vert_spacer())
         return self
 
 class HtmlGenV1(PipelineNode):
@@ -171,7 +171,7 @@ class HtmlGenV1(PipelineNode):
         working_doc=self.pipe_hub.ctrl_hub.main.model_hub.working_doc
         memo=self.find_memo(working_doc.root_node,Memo)
         title=memo.title
-        paths=my_utils.qt_file_io(title="Save To ...",side_paths=[os.getcwd()])
+        paths=qt_utils.qt_file_io(title="Save To ...",side_paths=[os.getcwd()])
         for path in paths:
             if os.path.isfile(path):
                 continue

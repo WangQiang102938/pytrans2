@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import *
 from PIL.Image import Image
 from controller.pipeline.pipeline_hub import PipeMemo, PipeUpdateMode, PipelineHub, PipelineNode
 from model.capture.capture_node import CaptureNode
-import my_utils.pipeline_utils as pipeline_utils
+import my_utils.qt_utils as qt_utils
 import my_utils
 import pytesseract
 
@@ -68,11 +68,11 @@ class TesseractWidget(QFrame):
         # self.setStyleSheet("border:1px solid red")
         self.setLayout(self.main_layout)
 
-        self.realtime_check =pipeline_utils.FormItem(self).setup(
+        self.realtime_check =qt_utils.FormItem(self).setup(
             "",self.main_layout
         ).add_content(QCheckBox("Realtiem Update"))
 
-        self.lang_select_combo =pipeline_utils.FormItem(self).setup(
+        self.lang_select_combo =qt_utils.FormItem(self).setup(
             "OCR Lang",self.main_layout
         ).add_content(QComboBox())
 
