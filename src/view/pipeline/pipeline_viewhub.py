@@ -12,7 +12,7 @@ from typing import *
 from view.pipeline.pipe_link_edit import PipeLinkEditWidget
 if TYPE_CHECKING:
     from view.view_hub import ViewHub
-import my_utils as pytrans_utils
+import my_utils as my_utils
 
 
 class PipelineEditFlag(Enum):
@@ -27,7 +27,7 @@ class PipelineViewhub:
         self.pipeline_ctrlhub=view_hub.main.controller_hub.pipeline_hub
         self.ui=view_hub.ui
 
-        for node in self.pipeline_ctrlhub.pipeline_nodes:
+        for node in self.pipeline_ctrlhub.pipeline_node_cls:
             self.ui.pipeAvaliableCombo.addItem(node.name,node)
 
         self.ui.PipeAddBtn.clicked.connect(lambda x:self.pipeline_edit(PipelineEditFlag.ADD_NODE))
@@ -60,10 +60,10 @@ class PipelineViewhub:
                 pipeline_node_ins_list.remove(curr_ins)
             elif(flag==PipelineEditFlag.BRING_UP):
                 curr_index=pipeline_node_ins_list.index(curr_ins)
-                pytrans_utils.swap_list_item(pipeline_node_ins_list,curr_index,curr_index-1)
+                my_utils.swap_list_item(pipeline_node_ins_list,curr_index,curr_index-1)
             elif(flag==PipelineEditFlag.BRING_DOWN):
                 curr_index=pipeline_node_ins_list.index(curr_ins)
-                pytrans_utils.swap_list_item(pipeline_node_ins_list,curr_index,curr_index+1)
+                my_utils.swap_list_item(pipeline_node_ins_list,curr_index,curr_index+1)
 
         def index_from_item(item:QListWidgetItem):
             ins=None if item==None else item.data(Qt.ItemDataRole.UserRole)
@@ -88,12 +88,12 @@ class PipelineViewhub:
         curr=self.ui.pipeOptionViewList.currentItem()
         if(curr!=None):
             pipe_node:PipelineNode=curr.data(Qt.ItemDataRole.UserRole)
-            pytrans_utils.qwidget_cleanup(pipe_option_con)
+            my_utils.qwidget_cleanup(pipe_option_con)
             self.ui.pipeOptionTab.layout().addWidget(pipe_option_con)
             pipe_node.option_ui_setup(pipe_option_con)
         else:
-            pytrans_utils.qwidget_cleanup(pipe_option_con)
-            pytrans_utils.qwidget_cleanup(pipe_node_option_con)
+            my_utils.qwidget_cleanup(pipe_option_con)
+            my_utils.qwidget_cleanup(pipe_node_option_con)
 
     def pipe_edit_changed(self,row:int):
         pass

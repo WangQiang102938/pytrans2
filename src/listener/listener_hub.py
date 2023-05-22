@@ -9,13 +9,15 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
+import my_utils
+
 
 if TYPE_CHECKING:
     from main import PyTransApp
 
 
 class ListenerHub:
-    def __init__(self, main: 'PyTransApp') -> None:
+    def __init__(self, main: "PyTransApp") -> None:
         self.main = main
         self.listener_set = list[Listener]()
         self.prev_queue = list[PyTransEvent]()
@@ -23,23 +25,14 @@ class ListenerHub:
         self.nest_queue = list[PyTransEvent]()
         self.active_flag = False
         self.callback_set_flag = False
-        self.scan_listeners(os.path.split(__file__)[0])
+        self.scan_listeners()
 
-    def scan_listeners(self, path):
-        sys.path.append(path) if path not in sys.path else None
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                filename, ext = os.path.splitext(file)
-                if (ext != '.py' or __file__ == f"{root}/{file}"):
-                    continue
-                module = importlib.machinery.SourceFileLoader(
-                    filename, f"{root}/{file}").load_module()
-                for clsname, obj in inspect.getmembers(module, inspect.isclass):
-                    if issubclass(obj, Listener):
-                        if (obj != Listener and obj not in [x.__class__ for x in self.listener_set]):
-                            self.listener_set.append(obj(self))
+    def scan_listeners(self):
+        listener_clses = my_utils.scan_class(os.path.split(__file__)[0], Listener)
+        for cls in listener_clses:
+            self.listener_set.append(cls(self))
 
-    def event_inqueue(self, event: 'PyTransEvent'):
+    def event_inqueue(self, event: "PyTransEvent"):
         if not self.callback_set_flag:
             QTimer.singleShot(0, self.process_event)
             self.callback_set_flag = True
@@ -50,7 +43,7 @@ class ListenerHub:
 
     def process_event(self):
         self.active_flag = True
-        event_queue = self.prev_queue+self.curr_queue
+        event_queue = self.prev_queue + self.curr_queue
         self.prev_queue.clear()
         self.curr_queue.clear()
         while event_queue.__len__() > 0:
@@ -72,15 +65,15 @@ class Listener:
         self.listener_hub = l_hub
         self.main = l_hub.main
 
-    def listened_event(self, event: 'PyTransEvent') -> bool:
+    def listened_event(self, event: "PyTransEvent") -> bool:
         return PyTransEvent.Type.NOP == event.type
 
-    def event_handler(self, event: 'PyTransEvent'):
+    def event_handler(self, event: "PyTransEvent"):
         pass
 
 
 class PyTransEvent:
-    def __init__(self, type: 'PyTransEvent.Type', *args, **kwargs) -> None:
+    def __init__(self, type: "PyTransEvent.Type", *args, **kwargs) -> None:
         self.type = type
         self.args = args
         self.kwargs = kwargs
@@ -89,4 +82,4 @@ class PyTransEvent:
         NOP = auto()
         UI_UPDATE = auto()
         NODE_UPDATE = auto()
-        PIPELINE_RUN=auto()
+        PIPELINE_RUN = auto()

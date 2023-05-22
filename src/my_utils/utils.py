@@ -1,6 +1,7 @@
 from enum import Enum
 from model.capture.capture_node import CaptureNode
-import random,os,sys
+import random,os,sys,importlib,inspect
+from importlib.machinery import SourceFileLoader
 
 import PyQt6.sip as sip
 from PyQt6.QtCore import *
@@ -75,3 +76,19 @@ def qt_file_io(
         return file_dialog.selectedFiles()
     else:
         return None
+
+def scan_class(path:str,cls:Type[T],exclude_cmp_cls=True)->list[Type[T]]:
+    cls_list=[]
+    sys.path.append(path) if path not in sys.path else None
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            filename, ext = os.path.splitext(file)
+            if (ext != '.py' or __file__ == f"{root}/{file}"):
+                continue
+            module = SourceFileLoader(filename, f"{root}/{file}").load_module()
+            for clsname, obj in inspect.getmembers(module, inspect.isclass):
+                if issubclass(obj, cls):
+                    if(obj==cls and not exclude_cmp_cls):
+                        continue
+                    cls_list.append(obj)
+    return cls_list

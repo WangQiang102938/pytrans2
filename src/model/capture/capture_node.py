@@ -2,36 +2,42 @@ from enum import Enum, auto
 
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from model.doc import WorkingDoc
+
+
 class CapNodeType(Enum):
     RAW = auto()
     ROOT = auto()
     CONTAINER = auto()
     TEXT = auto()
     IMAGE = auto()
-    STRUCTURE=auto()
+    STRUCTURE = auto()
+
 
 class CaptureNode:
-    Type=CapNodeType
+    Type = CapNodeType
 
-    def __init__(self,working_doc:'WorkingDoc',node_type:CapNodeType=CapNodeType.RAW) -> None:
+    def __init__(
+        self, working_doc: "WorkingDoc", node_type: CapNodeType = CapNodeType.RAW
+    ) -> None:
         self.parent: CaptureNode = None
         self.children = list[CaptureNode]()
         self.kwargs = dict()
         self.visual_memo: CaptureNode.VisualMemo = None
         self.working_doc: WorkingDoc = working_doc
         self.pipeline_memo = dict()
-        self.node_type=node_type
+        self.node_type = node_type
 
-    def link_parent(self, parent: 'CaptureNode'):
+    def link_parent(self, parent: "CaptureNode"):
         self.parent = parent
         self.working_doc = parent.working_doc
-        if(self not in parent.children):
+        if self not in parent.children:
             parent.children.append(self)
         return self
 
-    def link_children(self, child: 'CaptureNode'):
+    def link_children(self, child: "CaptureNode"):
         if child not in self.children:
             self.children.append(child)
         child.link_parent(self)
@@ -43,13 +49,20 @@ class CaptureNode:
     def get_visual_memo(self):
         return self.visual_memo
 
-    def set_visual_memo(self, info: 'VisualMemo'):
+    def set_visual_memo(self, info: "VisualMemo"):
         self.visual_memo = info
 
-
-
     class VisualMemo:
-        def __init__(self, left: float, top: float, right: float, bottom: float, page_no: int, *args, **kwargs) -> None:
+        def __init__(
+            self,
+            left: float,
+            top: float,
+            right: float,
+            bottom: float,
+            page_no: int,
+            *args,
+            **kwargs
+        ) -> None:
             self.left = left
             self.right = right
             self.top = top
@@ -58,7 +71,16 @@ class CaptureNode:
             self.args = args
             self.kwargs = kwargs
 
-        def update(self, left: float = None, top: float = None, right: float = None, bottom: float = None, page_no: int = None, *args, **kwargs) -> None:
+        def update(
+            self,
+            left: float = None,
+            top: float = None,
+            right: float = None,
+            bottom: float = None,
+            page_no: int = None,
+            *args,
+            **kwargs
+        ) -> None:
             self.left = left if left != None else self.left
             self.right = right if right != None else self.right
             self.top = top if top != None else self.top
