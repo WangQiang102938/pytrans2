@@ -1,3 +1,4 @@
+from my_utils import qt_utils
 from view.view_hub import ViewHub
 from controller.controller_hub import ControllerHub
 from typing import TYPE_CHECKING, Callable
@@ -20,6 +21,8 @@ class PyTransApp:
         # sys.argv+=['-platform', 'windows:darkmode=2']
         self.app = QApplication(sys.argv)
         self.mainwindow = QMainWindow()
+        self.mainwindow_event_obj=qt_utils.EventQObj().post_init()
+        self.mainwindow.installEventFilter(self.mainwindow_event_obj)
 
         self.ui = Ui_MainWindow()
         self.app.setStyle("Fusion")
@@ -32,8 +35,7 @@ class PyTransApp:
         self.model_hub = ModelHub(self)
 
         self.resize_callbacks = list[Callable[[QResizeEvent], None]]()
-        self.origin_resize_call = self.mainwindow.resizeEvent
-        self.mainwindow.resizeEvent = self.g_resize_call
+
 
     def start_gui(self):
         self.mainwindow.show()
@@ -67,10 +69,7 @@ class PyTransApp:
         ins["HTML Gen V1"].link_info['origin_in:[[str]]']=(ins["StdFormatter"],'out:[[str]]')
         return
 
-    def g_resize_call(self, event: QResizeEvent):
-        for callback in self.resize_callbacks:
-            callback(event)
-        self.origin_resize_call(event)
+    
 
 
 if __name__ == '__main__':

@@ -50,8 +50,11 @@ class TesseractOCR(PipelineNode):
             return False
         memo.image_in=img
         lang_combo = self.widget.lang_select_combo
-        ocr_result = pytesseract.image_to_string(
-            img, lang=lang_combo.currentData())
+        if self.widget.ignore_image.isChecked() and node.node_type==node.Type.IMAGE:
+            ocr_result=[[""]]
+        else:
+            ocr_result = pytesseract.image_to_string(
+                img, lang=lang_combo.currentData())
         memo.out_txt=ocr_result
         return True
 
@@ -75,12 +78,23 @@ class TesseractWidget(QFrame):
         self.lang_select_combo =qt_utils.FormItem(self).setup(
             "OCR Lang",self.main_layout
         ).add_content(QComboBox())
-
-        self.lang_select_combo.setMaximumWidth(100)
+        self.lang_select_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
         self.lang_select_combo.setMaxVisibleItems(10)
         self.lang_select_combo.setStyleSheet(
             "QComboBox{combobox-popup:0;}"
         )
+
+        self.ignore_image =qt_utils.FormItem(self).setup(
+            "",self.main_layout
+        ).add_content(QCheckBox("Ignore image capture"))
+        self.ignore_image.setChecked(True)
+        
+        self.print_check =qt_utils.FormItem(self).setup(
+            "",self.main_layout
+        ).add_content(QCheckBox("Print output"))
+
         for enum in TesseractLangEnum:
             self.lang_select_combo.addItem(enum.name, enum.value)
         self.lang_select_combo.setCurrentText(TesseractLangEnum.English.name)
@@ -88,7 +102,6 @@ class TesseractWidget(QFrame):
         self.main_layout.addItem(QSpacerItem(
             20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         self.main_layout.setContentsMargins(2, 2, 2, 2)
-        # self.setStyleSheet('border:1px solid red')
         return self
 
 
