@@ -50,7 +50,9 @@ class HtmlGenWidget(QFrame):
             .setup("File", main_layout)
             .add_content_chain(QPushButton("Save"))
         )
+
         self.open_after_save_check = save_con.add_content(QCheckBox("Open after saved"))
+        self.open_after_save_check.setChecked(True)
 
         self.image_ext_combo = (
             qt_utils.FormItem(self)
@@ -130,8 +132,8 @@ class HtmlGenV1(PipelineNode):
         if image == None:
             return
         aligned_txt = self.align_txt(origin_txt, trans_txt)
-        if aligned_txt == None:
-            return
+        # if aligned_txt == None:
+        #     return
 
         html_row = self.gen_html(image, aligned_txt)
 
@@ -156,26 +158,26 @@ class HtmlGenV1(PipelineNode):
         text_con = SimpleHTMLTag("div", args='class="capture-tex-con"').add_me_to(
             text_td
         )
-
-        for sec_pair in aligned_txt:
-            con = SimpleHTMLTag("div", args='class="capture-text-block-con"').add_me_to(
-                text_con
-            )
-            for sent_pair in sec_pair:
-                con.add_content(
-                    SimpleHTMLTag("div", args='class="paired-translate-con"')
-                    .chain_content(
-                        SimpleHTMLTag("p", args='class="origin-text"').chain_content(
-                            SimpleHTMLTag(sent_pair[0], text_flag=True)
-                        )
-                    )
-                    .chain_content(SimpleHTMLTag("br", surround=False))
-                    .chain_content(
-                        SimpleHTMLTag("p", args='class="trans-text"').chain_content(
-                            SimpleHTMLTag(sent_pair[1], text_flag=True)
-                        )
-                    )
+        if aligned_txt!=None:
+            for sec_pair in aligned_txt:
+                con = SimpleHTMLTag("div", args='class="capture-text-block-con"').add_me_to(
+                    text_con
                 )
+                for sent_pair in sec_pair:
+                    con.add_content(
+                        SimpleHTMLTag("div", args='class="paired-translate-con"')
+                        .chain_content(
+                            SimpleHTMLTag("p", args='class="origin-text"').chain_content(
+                                SimpleHTMLTag(sent_pair[0], text_flag=True)
+                            )
+                        )
+                        .chain_content(SimpleHTMLTag("br", surround=False))
+                        .chain_content(
+                            SimpleHTMLTag("p", args='class="trans-text"').chain_content(
+                                SimpleHTMLTag(sent_pair[1], text_flag=True)
+                            )
+                        )
+                    )
 
         return html_row
 
@@ -235,11 +237,12 @@ class HtmlGenV1(PipelineNode):
             saving_path = f"{path}/{title}"
             if os.path.exists(saving_path) and os.path.isdir(saving_path):
                 overwrite_confirm = QMessageBox.question(
-                    None,
+                    self.option_widget,
                     "Overwrite confirm",
                     "This directory already exist, Overwrite?",
+                    QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No,QMessageBox.StandardButton.No
                 )
-                if overwrite_confirm == QMessageBox.DialogCode.Rejected:
+                if overwrite_confirm != QMessageBox.StandardButton.Yes:
                     continue
             else:
                 os.mkdir(saving_path)

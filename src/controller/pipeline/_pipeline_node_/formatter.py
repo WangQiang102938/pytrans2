@@ -73,7 +73,7 @@ class StandardFormatter(PipelineNode):
         else:
             for i,section in enumerate(sections.copy()):
                 sections[i]=[section]
-        print(sections)
+
         memo.formatted=sections
 
     def get_output(self, node: CaptureNode, key: str) -> Any:

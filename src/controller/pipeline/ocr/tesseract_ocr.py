@@ -50,8 +50,11 @@ class TesseractOCR(PipelineNode):
             return False
         memo.image_in=img
         lang_combo = self.widget.lang_select_combo
-        ocr_result = pytesseract.image_to_string(
-            img, lang=lang_combo.currentData())
+        if self.widget.ignore_image.isChecked() and node.node_type==node.node_type.IMAGE:
+            ocr_result=""
+        else:
+            ocr_result = pytesseract.image_to_string(
+                img, lang=lang_combo.currentData())
         memo.out_txt=ocr_result
         return True
 
@@ -71,6 +74,11 @@ class TesseractWidget(QFrame):
         self.realtime_check =qt_utils.FormItem(self).setup(
             "",self.main_layout
         ).add_content(QCheckBox("Realtiem Update"))
+
+        self.ignore_image =qt_utils.FormItem(self).setup(
+            "",self.main_layout
+        ).add_content(QCheckBox("Ignore Image"))
+        self.ignore_image.setChecked(True)
 
         self.lang_select_combo =qt_utils.FormItem(self).setup(
             "OCR Lang",self.main_layout
