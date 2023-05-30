@@ -32,9 +32,12 @@ class PreviewHub:
         self.gview.setScene(self.scene)
         self.capture_gview.setScene(self.capture_preview_scene)
         ui = self.view_hub.ui
+
         ui.zoomFitButton.clicked.connect(lambda x: self.zoom())
         ui.zoomInButton.clicked.connect(lambda x: self.zoom(True))
         ui.zoomOutButton.clicked.connect(lambda x: self.zoom(False))
+        self.view_hub.main.mainwindow_event_obj.add_callback(QResizeEvent,lambda x:self.zoom())
+
         ui.previewPrevButton.clicked.connect(lambda x: self.change_page(False))
         ui.previewNextButton.clicked.connect(lambda x: self.change_page(True))
 
@@ -64,15 +67,18 @@ class PreviewHub:
         )
 
     def zoom(self, zoom_in: bool = None):
-        if zoom_in == None:
+        fit_in_view_btn=self.view_hub.ui.zoomFitButton
+        if zoom_in == None and fit_in_view_btn.isChecked():
             self.scene.setSceneRect(self.page_item.boundingRect())
             self.gview.fitInView(
                 self.page_item.boundingRect(), mode=Qt.AspectRatioMode.KeepAspectRatio
             )
         elif zoom_in == True:
+            fit_in_view_btn.setChecked(False)
             self.gview.scale(self.scale_factor, self.scale_factor)
         elif zoom_in == False:
-            self.gview.scale(1 / self.scale_factor, 1 / self.scale_factor)
+            fit_in_view_btn.setChecked(False)
+            self.gview.scale(1/self.scale_factor, 1/self.scale_factor)
 
         for item in [x for x in self.scene.items() if isinstance(x, ResizeIconItem)]:
             item.self_update_pos()
