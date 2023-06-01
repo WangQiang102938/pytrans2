@@ -40,16 +40,18 @@ def add_to_layout(layout: QLayout, widget: T) -> T:
     return widget
 
 
-def gen_vert_spacer():
-    return QSpacerItem(1, 1,
-                       QSizePolicy.Policy.Minimum,
-                       QSizePolicy.Policy.Expanding,
-                       )
+def gen_spacer(vert_flag=True):
+    return QSpacerItem(
+        1,
+        1,
+        QSizePolicy.Policy.Minimum if vert_flag else QSizePolicy.Policy.Expanding,
+        QSizePolicy.Policy.Expanding if vert_flag else QSizePolicy.Policy.Minimum,
+    )
 
 
 def qwidget_cleanup(widget: QWidget):
     for child in widget.children():
-        if (isinstance(child, QLayout)):
+        if isinstance(child, QLayout):
             layout: QLayout = child
             rev_item_i_list = list(range(layout.count())).reverse()
             while True:
@@ -67,7 +69,7 @@ def qwidget_cleanup(widget: QWidget):
 def qt_file_io(
     file_mode: QFileDialog.FileMode = QFileDialog.FileMode.Directory,
     title: str = None,
-    side_paths: list[str] = []
+    side_paths: list[str] = [],
 ):
     title = file_mode.name if title != None else title
 
@@ -77,27 +79,35 @@ def qt_file_io(
     file_dialog.setOption(file_dialog.Option.DontUseNativeDialog)
 
     file_dialog.setSidebarUrls(
-        [QUrl.fromLocalFile(x) for x in side_paths]+[
-            QUrl.fromLocalFile(QStandardPaths.standardLocations(
-                QStandardPaths.StandardLocation.DesktopLocation)[0]),
-            QUrl.fromLocalFile(QStandardPaths.standardLocations(
-                QStandardPaths.StandardLocation.DocumentsLocation)[0]),
-            QUrl.fromLocalFile(QStandardPaths.standardLocations(
-                QStandardPaths.StandardLocation.HomeLocation)[0]),
-        ])
+        [QUrl.fromLocalFile(x) for x in side_paths]
+        + [
+            QUrl.fromLocalFile(
+                QStandardPaths.standardLocations(
+                    QStandardPaths.StandardLocation.DesktopLocation
+                )[0]
+            ),
+            QUrl.fromLocalFile(
+                QStandardPaths.standardLocations(
+                    QStandardPaths.StandardLocation.DocumentsLocation
+                )[0]
+            ),
+            QUrl.fromLocalFile(
+                QStandardPaths.standardLocations(
+                    QStandardPaths.StandardLocation.HomeLocation
+                )[0]
+            ),
+        ]
+    )
 
-    if (file_dialog.exec()):
+    if file_dialog.exec():
         return file_dialog.selectedFiles()
     else:
         return None
 
 
 class EventQObj(QObject):
-
     def post_init(self):
-        self.callback_dict = dict[
-            Type[QEvent], list[Callable[[QEvent], None]]
-        ]()
+        self.callback_dict = dict[Type[QEvent], list[Callable[[QEvent], None]]]()
         return self
 
     def add_callback(self, event_cls: Type[QEvent], callback: Callable[[QEvent], None]):

@@ -97,6 +97,20 @@ class CaptureBoxItem(QGraphicsRectItem):
         return 1
 
     def item_will_unselected(self):
+        self.sync_to_model()
+        self.update_box_preview(unmount=True)
+        # after
+
+        # TODO: Make it to event
+        # test_pipe = self.preview_hub.view_hub.main.controller_hub.pipeline_hub.pipeline_nodes[0]
+        # test_pipe.process_node(self.capture_node,update_flag=True)
+
+        for item in self.resize_icons:
+            item.setVisible(False)
+        self.setBrush(QColor(0, 0, 0, 0))
+        return 0
+
+    def sync_to_model(self):
         ratio_rect = preview_utils.map_rect_to_ratio(
             QRectF(
                 self.rect().topLeft() + self.pos(),
@@ -110,17 +124,6 @@ class CaptureBoxItem(QGraphicsRectItem):
             right=ratio_rect.right(),
             bottom=ratio_rect.bottom(),
         )
-        self.update_box_preview(unmount=True)
-        # after
-
-        # TODO: Make it to event
-        # test_pipe = self.preview_hub.view_hub.main.controller_hub.pipeline_hub.pipeline_nodes[0]
-        # test_pipe.process_node(self.capture_node,update_flag=True)
-
-        for item in self.resize_icons:
-            item.setVisible(False)
-        self.setBrush(QColor(0, 0, 0, 0))
-        return 0
 
     def resize(
         self,
@@ -163,6 +166,7 @@ class CaptureBoxItem(QGraphicsRectItem):
         self.preview_hub.capture_gview.fitInView(
             self.preview_item, Qt.AspectRatioMode.KeepAspectRatio
         )
+        self.sync_to_model()
 
     def delete_me(self):
         parent_node = self.capture_node.parent

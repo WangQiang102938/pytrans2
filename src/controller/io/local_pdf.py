@@ -1,3 +1,5 @@
+import os
+import shutil
 from PyQt6 import QtGui
 from PyQt6.QtWidgets import QWidget
 from pypdfium2 import PdfDocument
@@ -36,9 +38,9 @@ class LocalPDFModule(IOModule):
     def open(self, path_list: list[str]):
         if not isinstance(path_list, list):
             return
-        self.io_hub.ui_lock(False)
-        self.widget.doc_progress_bar.setRange(0,len(path_list))
-        for i,path in enumerate(path_list):
+        self.io_hub.ui_lock_update(False)
+        self.widget.doc_progress_bar.setRange(0, len(path_list))
+        for i, path in enumerate(path_list):
             self.widget.doc_progress_bar.setValue(i)
             rendered_pages = io_utils.load_local_pdf(
                 path, self.widget.progress_call, self.widget.scale_spin.value()
@@ -52,25 +54,26 @@ class LocalPDFModule(IOModule):
             tmp_doc.io_memo = tmp_memo
             tmp_doc.reload(rendered_pages)
             self.io_hub.add_doc(tmp_doc)
-            self.widget.doc_progress_bar.setValue(i+1)
-            self.io_hub.ui_lock(False)
-        self.io_hub.ui_lock()
+            self.widget.doc_progress_bar.setValue(i + 1)
+            self.io_hub.ui_lock_update()
+        self.io_hub.ui_lock_update(True)
 
     def get_widget(self) -> QWidget:
         return self.widget
 
-    def get_pdf_path(self, working_doc: WorkingDoc):
+    def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
+        if not isinstance(working_doc.io_memo, ModuleMemo):
+            return super().get_doc_title(working_doc)
+        memo = working_doc.io_memo
+        return f"{my_utils.split_filename(memo.path)}{'' if not with_id else f' @ {id(memo)}'}"
+
+    def save_source_to(self, path: str, working_doc: WorkingDoc):
         try:
             memo: ModuleMemo = working_doc.io_memo
-            return memo.path
+            shutil.copy2(memo.path, f"{path}/{os.path.split(memo.path)[1]}")
+            return True
         except Exception as e:
-            return None
-
-    def gen_doc_title(self, working_doc: WorkingDoc):
-        if not isinstance(working_doc.io_memo,ModuleMemo):
-            return super().gen_doc_title(working_doc)
-        memo=working_doc.io_memo
-        return f"{my_utils.split_filename(memo.path)} @ {id(memo)}"
+            return False
 
 
 class ModuleWidget(QFrame):
@@ -80,7 +83,7 @@ class ModuleWidget(QFrame):
         self.setLayout(main_layout)
 
         self.main_btn = my_utils.qt_utils.add_to_layout(
-            main_layout, ModuleBtn("Open PDFs or drop PDFs file here",self)
+            main_layout, ModuleBtn("Open PDFs or drop PDFs file here", self)
         )
         self.main_btn.set_open_call(self.module.open)
         self.main_btn.setSizePolicy(
@@ -110,7 +113,7 @@ class ModuleWidget(QFrame):
     def progress_call(self, page_i, page_len):
         self.page_progress_bar.setRange(0, page_len)
         self.page_progress_bar.setValue(page_i)
-        self.module.io_hub.ui_lock(False)
+        self.module.io_hub.ui_lock_update()
 
 
 class ModuleBtn(QPushButton):

@@ -14,7 +14,7 @@ from controller.pipeline.pipeline_hub import (
 from model.capture.capture_node import CaptureNode
 import my_utils.qt_utils as qt_utils
 import my_utils
-import os, sys, shutil
+import os, sys, shutil, base64, io
 
 
 class PortEnum(Enum):
@@ -36,7 +36,7 @@ class Memo(PipeMemo):
         self.html: str = None
         self.img_ext: str = None
         self.title: str = None
-        self.pdf_path:str=None
+        self.pdf_path: str = None
 
 
 class HtmlGenWidget(QFrame):
@@ -54,6 +54,11 @@ class HtmlGenWidget(QFrame):
         self.open_after_save_check = save_con.add_content(QCheckBox("Open after saved"))
         self.open_after_save_check.setChecked(True)
 
+        self.inline_html_check = save_con.add_content(
+            QCheckBox("make image and style inline")
+        )
+        self.inline_html_check.setChecked(True)
+
         self.image_ext_combo = (
             qt_utils.FormItem(self)
             .setup("Image Type", main_layout)
@@ -68,7 +73,7 @@ class HtmlGenWidget(QFrame):
             .add_content(QCheckBox("Print html"))
         )
 
-        self.main_layout.addItem(qt_utils.gen_vert_spacer())
+        self.main_layout.addItem(qt_utils.gen_spacer())
         return self
 
 
@@ -140,13 +145,19 @@ class HtmlGenV1(PipelineNode):
         memo.id_img_dict[str(id(image))] = image
         memo.html_txts += [html_row.to_html()]
 
-    def gen_html(self, image, aligned_txt):
+    def gen_html(self, image: Image, aligned_txt):
+        img_src = f'src="./images/{id(image)}.{self.option_widget.image_ext_combo.currentData()}"'
+        if self.option_widget.inline_html_check.isChecked():
+            buffer = io.BytesIO()
+            ext = self.option_widget.image_ext_combo.currentData()
+            image.save(buffer, format=ext)
+            img_src = f'src="data:image/{ext};base64, {base64.b64encode(buffer.getvalue()).decode("utf-8")}"'
         html_row = SimpleHTMLTag("tr", args='class="capture-row"').chain_content(
             SimpleHTMLTag("td", args='class="capture-image-td"').chain_content(
                 SimpleHTMLTag("div", args='class="capture-clip-div"').chain_content(
                     SimpleHTMLTag(
                         "img",
-                        args=f'src="./images/{id(image)}.{self.option_widget.image_ext_combo.currentData()}"',
+                        args=img_src,
                         surround=False,
                     )
                 )
@@ -158,18 +169,18 @@ class HtmlGenV1(PipelineNode):
         text_con = SimpleHTMLTag("div", args='class="capture-tex-con"').add_me_to(
             text_td
         )
-        if aligned_txt!=None:
+        if aligned_txt != None:
             for sec_pair in aligned_txt:
-                con = SimpleHTMLTag("div", args='class="capture-text-block-con"').add_me_to(
-                    text_con
-                )
+                con = SimpleHTMLTag(
+                    "div", args='class="capture-text-block-con"'
+                ).add_me_to(text_con)
                 for sent_pair in sec_pair:
                     con.add_content(
                         SimpleHTMLTag("div", args='class="paired-translate-con"')
                         .chain_content(
-                            SimpleHTMLTag("p", args='class="origin-text"').chain_content(
-                                SimpleHTMLTag(sent_pair[0], text_flag=True)
-                            )
+                            SimpleHTMLTag(
+                                "p", args='class="origin-text"'
+                            ).chain_content(SimpleHTMLTag(sent_pair[0], text_flag=True))
                         )
                         .chain_content(SimpleHTMLTag("br", surround=False))
                         .chain_content(
@@ -216,13 +227,18 @@ class HtmlGenV1(PipelineNode):
         if memo == None:
             return
         try:
-            pdf_path = working_doc.io_memo.io_module.get_pdf_path(working_doc)
-            title = os.path.splitext(os.path.split(pdf_path)[1])[0]
+            title = working_doc.io_memo.io_module.get_doc_title(working_doc)
         except Exception as e:
             pdf_path = None
             title = "UNKNOWN title"
         memo.title = title
-        memo.html = html_template.format(title=title, trs="\n".join(memo.html_txts))
+        inline_style = ""
+        if self.option_widget.inline_html_check.isChecked():
+            with open(f"{os.path.split(__file__)[0]}/styles.css", "r") as f:
+                inline_style = f.read()
+        memo.html = html_template.format(
+            title=title, trs="\n".join(memo.html_txts), inline_style=inline_style
+        )
         memo.img_ext = self.option_widget.image_ext_combo.currentData()
 
     def save(self):
@@ -240,25 +256,27 @@ class HtmlGenV1(PipelineNode):
                     self.option_widget,
                     "Overwrite confirm",
                     "This directory already exist, Overwrite?",
-                    QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No,QMessageBox.StandardButton.No
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
                 )
                 if overwrite_confirm != QMessageBox.StandardButton.Yes:
                     continue
             else:
                 os.mkdir(saving_path)
-            if memo.pdf_path!=None:
-                shutil.copy2(memo.pdf_path, f"{saving_path}/")
-            shutil.copy2(f"{os.path.split(__file__)[0]}/styles.css", f"{saving_path}/")
+            working_doc.io_memo.io_module.save_source_to(saving_path, working_doc)
             with open(f"{saving_path}/{title}.html", "w") as f:
                 f.write(memo.html)
-            img_path = f"{saving_path}/images"
-            if not os.path.isdir(img_path):
-                os.mkdir(img_path)
-            for key, image in memo.id_img_dict.items():
-                image.save(f"{img_path}/{key}.{memo.img_ext}")
+            if self.option_widget.inline_html_check.isChecked() == False:
+                shutil.copy2(
+                    f"{os.path.split(__file__)[0]}/styles.css", f"{saving_path}/"
+                )
+                img_path = f"{saving_path}/images"
+                if not os.path.isdir(img_path):
+                    os.mkdir(img_path)
+                for key, image in memo.id_img_dict.items():
+                    image.save(f"{img_path}/{key}.{memo.img_ext}")
             if self.option_widget.open_after_save_check.isChecked():
                 import subprocess
-
                 subprocess.call(["open", saving_path])
                 break
 
@@ -308,6 +326,9 @@ html_template = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<style>
+{inline_style}
+</style>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
