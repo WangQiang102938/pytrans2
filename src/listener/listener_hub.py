@@ -32,7 +32,7 @@ class ListenerHub:
         for cls in listener_clses:
             self.listener_set.append(cls(self))
 
-    def event_inqueue(self, event: "PyTransEvent"):
+    def post_event(self, event: "PyTransEvent"):
         if not self.callback_set_flag:
             QTimer.singleShot(0, self.process_event)
             self.callback_set_flag = True
