@@ -125,3 +125,6 @@ class EventQObj(QObject):
             for callback in self.callback_dict[a1.__class__]:
                 callback(a1)
         return super().eventFilter(a0, a1)
+
+    def force_run(self, event: QEvent):
+        self.eventFilter(self, event)

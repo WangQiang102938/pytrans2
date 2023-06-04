@@ -36,7 +36,6 @@ class Memo(PipeMemo):
         self.html: str = None
         self.img_ext: str = None
         self.title: str = None
-        self.pdf_path: str = None
 
 
 class HtmlGenWidget(QFrame):
@@ -53,6 +52,8 @@ class HtmlGenWidget(QFrame):
 
         self.open_after_save_check = save_con.add_content(QCheckBox("Open after saved"))
         self.open_after_save_check.setChecked(True)
+
+        self.save_src_btn = save_con.add_content(QCheckBox("Save source"))
 
         self.inline_html_check = save_con.add_content(
             QCheckBox("make image and style inline")
@@ -247,25 +248,49 @@ class HtmlGenV1(PipelineNode):
         title = memo.title
         paths = qt_utils.qt_file_io(title="Save To ...", side_paths=[os.getcwd()])
         for path in paths:
-            if os.path.isfile(path):
+            if not os.path.isdir(path):
                 continue
-            # TODO: customize path
-            saving_path = f"{path}/{title}"
-            if os.path.exists(saving_path) and os.path.isdir(saving_path):
-                overwrite_confirm = QMessageBox.question(
+            # confirm if contents will store to a dir
+            saving_path = path
+            dir_mode = False
+            if not (
+                self.option_widget.inline_html_check.isChecked()
+                and not self.option_widget.save_src_btn.isChecked()
+            ):
+                dir_mode_confirm = QMessageBox.question(
                     self.option_widget,
-                    "Overwrite confirm",
-                    "This directory already exist, Overwrite?",
+                    "Contents location",
+                    "There are multiple contents need store, \
+                        would you like to create a folder to contain them",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes,
                 )
-                if overwrite_confirm != QMessageBox.StandardButton.Yes:
-                    continue
-            else:
-                os.mkdir(saving_path)
-            working_doc.io_memo.io_module.save_source_to(saving_path, working_doc)
-            with open(f"{saving_path}/{title}.html", "w") as f:
+                dir_mode = dir_mode_confirm == QMessageBox.StandardButton.Yes
+                if dir_mode:
+                    saving_path = saving_path = f"{path}/{title}"
+
+                if os.path.exists(saving_path) and os.path.isdir(saving_path):
+                    overwrite_confirm = QMessageBox.question(
+                        self.option_widget,
+                        "Overwrite confirm",
+                        "This directory already exist, Overwrite?",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.No,
+                    )
+                    if overwrite_confirm != QMessageBox.StandardButton.Yes:
+                        continue
+                else:
+                    os.mkdir(saving_path)
+
+            # save
+            # save source
+            if self.option_widget.save_src_btn.isChecked():
+                working_doc.io_memo.io_module.save_source_to(saving_path, working_doc)
+            # save html
+            html_path = f"{saving_path}/{title}.html"
+            with open(html_path, "w") as f:
                 f.write(memo.html)
+            # save css and images (when disabled inline mode)
             if self.option_widget.inline_html_check.isChecked() == False:
                 shutil.copy2(
                     f"{os.path.split(__file__)[0]}/styles.css", f"{saving_path}/"
@@ -275,9 +300,11 @@ class HtmlGenV1(PipelineNode):
                     os.mkdir(img_path)
                 for key, image in memo.id_img_dict.items():
                     image.save(f"{img_path}/{key}.{memo.img_ext}")
+            # open after save
             if self.option_widget.open_after_save_check.isChecked():
                 import subprocess
-                subprocess.call(["open", saving_path])
+
+                subprocess.call(["open", saving_path if dir_mode else html_path])
                 break
 
 

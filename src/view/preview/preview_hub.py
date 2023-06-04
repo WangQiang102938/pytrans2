@@ -39,6 +39,7 @@ class PreviewHub:
         self.view_hub.main.mainwindow_event_obj.add_callback(
             QResizeEvent, lambda x: self.zoom()
         )
+        ui.zoomFitButton.setChecked(True)
 
         ui.previewPrevButton.clicked.connect(lambda x: self.change_page(False))
         ui.previewNextButton.clicked.connect(lambda x: self.change_page(True))
@@ -50,10 +51,6 @@ class PreviewHub:
         ui.captureSelectCombo.setCurrentText(CapNodeType.TEXT.name)
 
         self.scale_factor = 1.25
-
-        self.view_hub.main.resize_callbacks.append(
-            lambda: self.zoom() if ui.zoomFitButton.isChecked() else None
-        )
 
     def add_capture_box(self, left, top, right, bottom):
         tmp_node = CaptureNode(
@@ -73,6 +70,8 @@ class PreviewHub:
         )
 
     def zoom(self, zoom_in: bool = None):
+        if self.page_item == None:
+            return
         fit_in_view_btn = self.view_hub.ui.zoomFitButton
         if zoom_in == None and fit_in_view_btn.isChecked():
             self.scene.setSceneRect(self.page_item.boundingRect())
