@@ -60,7 +60,7 @@ def qwidget_cleanup(widget: QWidget):
                     break
                 layout.removeItem(item)
                 if item.widget():
-                    widget.setParent(None)
+                    item.widget().setParent(None)
             QObjectCleanupHandler().add(layout)
         else:
             child.setParent(None)

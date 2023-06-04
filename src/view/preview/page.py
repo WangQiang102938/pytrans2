@@ -24,7 +24,7 @@ class PageItem(QGraphicsPixmapItem):
         self.setSelected(True)
         for item in self.childItems():
             item.setSelected(False)
-        if(self.preview_hub.view_hub.ui.captureCreateBtn.isChecked()):  # TODO:MODE SELECT
+        if(self.preview_hub.preview_control.create_btn.isChecked()):  # TODO:MODE SELECT
             self.start_pos = event.pos()
             self.end_pos = event.pos()
             self.creating_box = QGraphicsRectItem(

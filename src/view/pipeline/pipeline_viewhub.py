@@ -106,20 +106,17 @@ class PipelineViewhub:
         self.ui.pipeOptionViewList.setCurrentRow(curr_option_index)
 
     def pipe_option_changed(self, row: int):
+        pass
+
+    def pipe_edit_changed(self, row: int):
         pipe_option_con = self.ui.pipeOptionContainer
-        pipe_node_option_con = self.ui.pipeOptionContainer
-        curr = self.ui.pipeOptionViewList.currentItem()
+        curr = self.ui.pipeEditList.currentItem()
         if curr != None:
             pipe_node: PipelineNode = curr.data(Qt.ItemDataRole.UserRole)
             my_utils.qt_utils.qwidget_cleanup(pipe_option_con)
-            self.ui.pipeOptionTab.layout().addWidget(pipe_option_con)
             pipe_node.option_ui_setup(pipe_option_con)
         else:
             my_utils.qt_utils.qwidget_cleanup(pipe_option_con)
-            my_utils.qt_utils.qwidget_cleanup(pipe_node_option_con)
-
-    def pipe_edit_changed(self, row: int):
-        pass
 
     def pipeline_run(self):
         self.view_hub.main.listener_hub.post_event(

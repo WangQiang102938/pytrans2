@@ -13,8 +13,7 @@ import pypdfium2
 from typing import *
 
 import my_utils
-from my_utils import io_utils
-import my_utils.qt_utils
+from my_utils import io_utils, qt_utils
 
 if TYPE_CHECKING:
     from controller.io.io_hub import IOHub
@@ -81,9 +80,13 @@ class ModuleWidget(QFrame):
         self.module = module
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
+        setting_con = QWidget()
+        setting_con.setLayout(QHBoxLayout())
+        setting_layout = setting_con.layout()
+        main_layout.addWidget(setting_con)
 
-        self.main_btn = my_utils.qt_utils.add_to_layout(
-            main_layout, ModuleBtn("Open PDFs or drop PDFs file here", self)
+        self.main_btn = qt_utils.add_to_layout(
+            setting_layout, ModuleBtn("Open PDFs or drop PDFs file here", self)
         )
         self.main_btn.set_open_call(self.module.open)
         self.main_btn.setSizePolicy(
@@ -92,27 +95,31 @@ class ModuleWidget(QFrame):
         )
 
         self.scale_spin = (
-            my_utils.qt_utils.FormItem()
+            qt_utils.FormItem()
             .setup(
                 "scale",
-                main_layout,
+                setting_layout,
             )
             .add_content(QSpinBox())
         )
         self.scale_spin.setRange(1, 10)
         self.scale_spin.setValue(5)
-        self.doc_progress_bar = my_utils.qt_utils.add_to_layout(
-            main_layout, QProgressBar()
+        self.doc_progress_bar = (
+            qt_utils.FormItem()
+            .setup("Files Progress", main_layout)
+            .add_content(QProgressBar())
         )
-        self.page_progress_bar = my_utils.qt_utils.add_to_layout(
-            main_layout, QProgressBar()
+        self.render_progress_bar = (
+            qt_utils.FormItem()
+            .setup("Render Progress", main_layout)
+            .add_content(QProgressBar())
         )
 
         return self
 
     def progress_call(self, page_i, page_len):
-        self.page_progress_bar.setRange(0, page_len)
-        self.page_progress_bar.setValue(page_i)
+        self.render_progress_bar.setRange(0, page_len)
+        self.render_progress_bar.setValue(page_i)
         self.module.io_hub.ui_lock_update()
 
 
@@ -123,7 +130,7 @@ class ModuleBtn(QPushButton):
         self.clicked.connect(self.on_click)
 
     def on_click(self):
-        paths = my_utils.qt_utils.qt_file_io(QFileDialog.FileMode.ExistingFiles)
+        paths = qt_utils.qt_file_io(QFileDialog.FileMode.ExistingFiles)
         if paths != None:
             self.open_call(paths)
 

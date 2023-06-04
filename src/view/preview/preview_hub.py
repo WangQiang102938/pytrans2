@@ -9,6 +9,7 @@ from PyQt6.QtCore import *
 from typing import TYPE_CHECKING
 
 from view.preview.capture_box import ResizeIconItem
+from view.preview.preview_control import PreviewControl
 
 if TYPE_CHECKING:
     from view.view_hub import ViewHub
@@ -24,8 +25,10 @@ class PreviewHub:
         self.page_item: QGraphicsPixmapItem = None
         self.gview = self.view_hub.ui.previewImage
         self.capture_gview = self.view_hub.ui.capturePreviewImage
+        self.current_select_capmode = CapNodeType.TEXT
         # init
         self.static_init()
+        self.preview_control = PreviewControl(self)
         self.working_status_checking()
 
     def static_init(self):
@@ -54,7 +57,7 @@ class PreviewHub:
 
     def add_capture_box(self, left, top, right, bottom):
         tmp_node = CaptureNode(
-            self.working_doc, self.view_hub.ui.captureSelectCombo.currentData()
+            self.working_doc, self.preview_control.current_nodetype
         ).link_parent(self.working_doc.focus_node)
         tmp_node.set_visual_memo(
             tmp_node.VisualMemo(
