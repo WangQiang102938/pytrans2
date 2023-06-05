@@ -32,13 +32,12 @@ class PreviewHub:
         self.gview.setScene(self.scene)
         self.capture_gview.setScene(self.capture_preview_scene)
         ui = self.view_hub.ui
-
+        # zoom
         ui.zoomFitButton.clicked.connect(lambda x: self.zoom())
         ui.zoomInButton.clicked.connect(lambda x: self.zoom(True))
         ui.zoomOutButton.clicked.connect(lambda x: self.zoom(False))
         self.view_hub.main.mainwindow_event_obj.add_callback(
-            QResizeEvent, lambda x: self.zoom()
-        )
+            QResizeEvent, lambda x: self.zoom())
 
         ui.previewPrevButton.clicked.connect(lambda x: self.change_page(False))
         ui.previewNextButton.clicked.connect(lambda x: self.change_page(True))
@@ -50,10 +49,8 @@ class PreviewHub:
         ui.captureSelectCombo.setCurrentText(CapNodeType.TEXT.name)
 
         self.scale_factor = 1.25
-
-        self.view_hub.main.resize_callbacks.append(
-            lambda: self.zoom() if ui.zoomFitButton.isChecked() else None
-        )
+        # capture control
+        self.working_status_checking()
 
     def add_capture_box(self, left, top, right, bottom):
         tmp_node = CaptureNode(

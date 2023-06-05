@@ -56,6 +56,8 @@ class IOViewhub:
     def opened_doc_close(self):
         working_doc=self.model.working_doc
         doc_list=self.model.opened_docs
+        if doc_list.__len__()==0:
+            return
         working_i=doc_list.index(working_doc)
         doc_list.remove(working_doc)
         if working_i>=doc_list.__len__():
