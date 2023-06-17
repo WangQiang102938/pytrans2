@@ -11,6 +11,7 @@ from typing import *
 import my_utils.qt_utils
 
 from view.pipeline.pipe_link_edit import PipeLinkEditWidget
+from view.view_hub import ViewController, ViewHub
 
 if TYPE_CHECKING:
     from view.view_hub import ViewHub
@@ -24,9 +25,10 @@ class PipelineEditFlag(Enum):
     BRING_DOWN = auto()
 
 
-class PipelineViewhub:
-    def __init__(self, view_hub: "ViewHub") -> None:
-        self.view_hub = view_hub
+class PipelineViewhub(ViewController):
+    def __init__(self, view_hub: ViewHub) -> None:
+        super().__init__(view_hub)
+
         self.pipeline_ctrlhub = view_hub.main.controller_hub.pipeline_hub
         self.ui = view_hub.ui
 

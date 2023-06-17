@@ -7,17 +7,21 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
 from typing import TYPE_CHECKING
+from my_utils.utils import PIL2QPixmap, find_render_node
 
-from view.preview.capture_box import ResizeIconItem
+from view.preview.capture_box import CaptureBoxItem, ResizeIconItem
+from view.preview.page import PageItem
 from view.preview.preview_control import PreviewControl
+from view.view_hub import ViewHub, ViewController
 
 if TYPE_CHECKING:
     from view.view_hub import ViewHub
 
 
-class PreviewHub:
-    def __init__(self, view_hub: "ViewHub") -> None:
-        self.view_hub = view_hub
+class PreviewHub(ViewController):
+    def __init__(self, view_hub: ViewHub) -> None:
+        super().__init__(view_hub)
+
         self.working_doc: WorkingDoc = None
 
         self.scene = QGraphicsScene()
@@ -125,3 +129,41 @@ class PreviewHub:
         ui.previewNextButton.setEnabled(valid_flag_1)
 
         return valid_flag_1
+
+    def update(self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs):
+        if signal == ViewController.UpdateSignal.UPDATE_ALL:
+            working_doc = self.view_hub.main.model_hub.working_doc
+            # preview cleanup
+            for item in self.scene.items():
+                self.scene.removeItem(item)
+            self.working_doc = working_doc
+            if self.working_status_checking():
+                self.page_indic_update()
+                # page
+                page_img = working_doc.page_cache[working_doc.page_no]
+                self.page_item = PageItem(PIL2QPixmap(page_img), None).bind(self)
+                self.scene.addItem(self.page_item)
+                # capture node
+                root_node = working_doc.root_node
+                render_nodes = find_render_node(root_node, working_doc.page_no)
+                for item in render_nodes:
+                    CaptureBoxItem(self.page_item).bind(self, item)
+                self.working_status_checking()
+        elif signal == ViewController.UpdateSignal.UPDATE_FOCUS:
+            if args.__len__() != 1:
+                return
+            node: CaptureNode = self.UpdateSignal.UPDATE_FOCUS(args[0])
+            if node == None or node.get_visual_memo() == None:
+                return
+            memo = node.get_visual_memo()
+            working_doc = self.view_hub.main.model_hub.working_doc
+            working_doc.page_no = memo.page_no
+            self.update()
+            for item in self.scene.items():
+                if isinstance(item, CaptureBoxItem) and item.node_info == memo:
+                    item.setSelected(True)
+                else:
+                    item.setSelected(False)
+
+    def focus_node(self, node: CaptureNode):
+        pass

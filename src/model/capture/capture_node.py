@@ -30,6 +30,9 @@ class CaptureNode:
         self.pipeline_memo = dict()
         self.node_type = node_type
 
+    def get_node_name(self):
+        return str(id(self))
+
     def link_parent(self, parent: "CaptureNode"):
         self.parent = parent
         self.working_doc = parent.working_doc

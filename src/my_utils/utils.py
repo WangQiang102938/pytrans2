@@ -1,14 +1,10 @@
 from enum import Enum
-import typing
+import random, os, sys, inspect, typing, io
 
 from PyQt6.QtCore import QEvent, QObject
 from model.capture.capture_node import CaptureNode
-import random
-import os
-import sys
-import importlib
-import inspect
 from importlib.machinery import SourceFileLoader
+from PIL.Image import Image
 
 import PyQt6.sip as sip
 from PyQt6.QtCore import *
@@ -23,7 +19,7 @@ def swap_list_item(swap_list: list, a_i: int, b_i: int):
         a_i = b_i
         b_i = tmp
         del tmp
-    if a_i == b_i or swap_list == None or a_i < 0 or b_i > swap_list.__len__()-1:
+    if a_i == b_i or swap_list == None or a_i < 0 or b_i > swap_list.__len__() - 1:
         return
     b = swap_list.pop(b_i)
     a = swap_list.pop(a_i)
@@ -34,7 +30,7 @@ def swap_list_item(swap_list: list, a_i: int, b_i: int):
 def count_node(node: CaptureNode, count=0):
     for child in node.children:
         count = count_node(child, count)
-    return count+1
+    return count + 1
 
 
 T = TypeVar("T")
@@ -54,12 +50,12 @@ def scan_class(path: str, cls: Type[T], exclude_cmp_cls=True) -> list[Type[T]]:
     for root, dirs, files in os.walk(path):
         for file in files:
             filename, ext = os.path.splitext(file)
-            if (ext != '.py' or __file__ == f"{root}/{file}"):
+            if ext != ".py" or __file__ == f"{root}/{file}":
                 continue
             module = SourceFileLoader(filename, f"{root}/{file}").load_module()
             for clsname, obj in inspect.getmembers(module, inspect.isclass):
                 if issubclass(obj, cls):
-                    if (obj == cls and exclude_cmp_cls):
+                    if obj == cls and exclude_cmp_cls:
                         continue
                     cls_list.append(obj)
     return cls_list
@@ -73,3 +69,22 @@ def split_filename(filepath: str):
     return os.path.splitext(os.path.split(filepath)[1])[0]
 
 
+def find_render_node(curr_node: CaptureNode, page_no: int, res_list: list = None):
+    if res_list == None:
+        res_list = list()
+    if (
+        curr_node.get_visual_memo() != None
+        and curr_node.get_visual_memo().page_no == page_no
+    ):
+        res_list.append(curr_node)
+    for node in curr_node.children:
+        find_render_node(node, page_no, res_list)
+    return res_list
+
+
+def PIL2QPixmap(pil: Image):
+    buffer = io.BytesIO()
+    pil.save(buffer, format="JPEG")
+    img = QImage()
+    img.loadFromData(buffer.getvalue())
+    return QPixmap(img)
