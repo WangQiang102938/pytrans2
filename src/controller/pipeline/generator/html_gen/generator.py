@@ -54,6 +54,8 @@ class HtmlGenWidget(QFrame):
         self.open_after_save_check.setChecked(True)
 
         self.save_src_btn = save_con.add_content(QCheckBox("Save source"))
+        self.save_name = save_con.add_content(QLineEdit())
+        self.save_name.setPlaceholderText("Saving Name")
 
         self.inline_html_check = save_con.add_content(
             QCheckBox("make image and style inline")
@@ -241,12 +243,16 @@ class HtmlGenV1(PipelineNode):
             title=title, trs="\n".join(memo.html_txts), inline_style=inline_style
         )
         memo.img_ext = self.option_widget.image_ext_combo.currentData()
+        self.option_widget.save_name.setText(memo.title)
 
     def save(self):
         working_doc = self.pipe_hub.ctrl_hub.main.model_hub.working_doc
         memo = self.find_memo(working_doc.root_node, Memo)
-        title = memo.title
+        title = self.option_widget.save_name.text()
+        title = title if title != "" else memo.title
         paths = qt_utils.qt_file_io(title="Save To ...", side_paths=[os.getcwd()])
+        if paths == None:
+            return
         for path in paths:
             if not os.path.isdir(path):
                 continue
@@ -256,7 +262,7 @@ class HtmlGenV1(PipelineNode):
             if not (
                 self.option_widget.inline_html_check.isChecked()
                 and not self.option_widget.save_src_btn.isChecked()
-            ):
+            ):  # dir mode
                 dir_mode_confirm = QMessageBox.question(
                     self.option_widget,
                     "Contents location",

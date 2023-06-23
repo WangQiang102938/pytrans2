@@ -37,6 +37,9 @@ class TreeViewHub(ViewController):
         self.tree_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.tree_widget.itemSelectionChanged.connect(self.selectionChanged)
 
+        self.id2node = dict[int, CaptureNode]()
+        self.id2item = dict[int, QTreeWidgetItem]()
+
     def update(self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs):
         def dfs(node: CaptureNode, tree_item=QTreeWidgetItem(), depth=0):
             for child in node.children:
@@ -48,27 +51,45 @@ class TreeViewHub(ViewController):
                 tree_item.addChild(child_item)
             tree_item.setText(0, node.get_node_name())
             tree_item.setText(1, node.get_node_type().name)
-            tree_item.setData(0, Qt.ItemDataRole.UserRole, node)
+            tree_item.setData(0, Qt.ItemDataRole.UserRole, id(node))
+            self.id2node[id(node)] = node
+            self.id2item[id(node)] = tree_item
+            tree_item.setExpanded(True)
             return tree_item
 
         if signal == ViewController.UpdateSignal.UPDATE_ALL:
             working_doc = self.view_hub.main.model_hub.working_doc
             if working_doc == None:
                 return
-            root_tree_item = dfs(working_doc.root_node)
+            self.id2item.clear()
+            self.id2node.clear()
             self.tree_widget.clear()
+            root_tree_item = dfs(working_doc.root_node)
             self.tree_widget.addTopLevelItem(root_tree_item)
+            self.tree_widget.expandItem(root_tree_item)
+        if signal == ViewController.UpdateSignal.UPDATE_FOCUS:
+            if args.__len__() != 1:
+                return
+            node = args[0] if isinstance(args[0], CaptureNode) else None
+            for node_id, item in self.id2item.items():
+                item.setSelected(node_id == id(node))
 
     def selectionChanged(self):
         selected_items = self.tree_widget.selectedItems()
         if len(selected_items) != 1:
             return
         item = selected_items[0]
-        self.view_hub.update_all(
-            ViewController.UpdateSignal.UPDATE_FOCUS,
-            item.data(0,Qt.ItemDataRole.UserRole),
-        )
+        if self.passive_mode == False:
+            self.view_hub.main.listener_hub.post_event(
+                PyTransEvent(
+                    PyTransEvent.Type.UI_UPDATE,
+                    self.UpdateSignal.UPDATE_FOCUS,
+                    self.id2node[item.data(0, Qt.ItemDataRole.UserRole)],
+                )
+            )
 
 
 class DragDropTreeWidget(QTreeWidget):
-    pass
+    def dragEnterEvent(self, e: QDragEnterEvent) -> None:
+        print("CHECK")
+        return super().dragEnterEvent(e)

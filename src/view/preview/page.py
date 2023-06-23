@@ -66,6 +66,7 @@ class PageItem(QGraphicsPixmapItem):
                 ratio_rect.top(),
                 ratio_rect.right(),
                 ratio_rect.bottom(),
+                second_selection=event.button() == Qt.MouseButton.RightButton,
             )
         preview_utils.update_box_preview(
             self.preview_hub, self.creating_box.rect(), unmount=True

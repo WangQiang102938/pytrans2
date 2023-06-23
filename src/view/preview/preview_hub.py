@@ -59,9 +59,12 @@ class PreviewHub(ViewController):
 
         self.scale_factor = 1.25
 
-    def add_capture_box(self, left, top, right, bottom):
+    def add_capture_box(self, left, top, right, bottom, second_selection=False):
         tmp_node = CaptureNode(
-            self.working_doc, self.preview_control.current_nodetype
+            self.working_doc,
+            self.preview_control.selected_nodetype
+            if not second_selection
+            else self.preview_control.selected_nodetype_second,
         ).link_parent(self.working_doc.focus_node)
         tmp_node.set_visual_memo(
             tmp_node.VisualMemo(
@@ -150,20 +153,16 @@ class PreviewHub(ViewController):
                     CaptureBoxItem(self.page_item).bind(self, item)
                 self.working_status_checking()
         elif signal == ViewController.UpdateSignal.UPDATE_FOCUS:
-            if args.__len__() != 1:
-                return
-            node: CaptureNode = self.UpdateSignal.UPDATE_FOCUS(args[0])
-            if node == None or node.get_visual_memo() == None:
-                return
-            memo = node.get_visual_memo()
-            working_doc = self.view_hub.main.model_hub.working_doc
-            working_doc.page_no = memo.page_no
-            self.update()
-            for item in self.scene.items():
-                if isinstance(item, CaptureBoxItem) and item.node_info == memo:
-                    item.setSelected(True)
-                else:
+            try:
+                node: CaptureNode = args[0]
+                for item in self.scene.items():
                     item.setSelected(False)
-
-    def focus_node(self, node: CaptureNode):
-        pass
+                memo = node.get_visual_memo()
+                working_doc = self.view_hub.main.model_hub.working_doc
+                working_doc.page_no = memo.page_no
+                self.update()
+                for item in self.scene.items():
+                    if isinstance(item, CaptureBoxItem):
+                        item.setSelected(node == item.capture_node)
+            finally:
+                return

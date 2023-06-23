@@ -94,6 +94,14 @@ class CaptureBoxItem(QGraphicsRectItem):
         for item in self.resize_icons:
             item.setVisible(True)
         self.update_box_preview(mount=True)
+        if not self.preview_hub.passive_mode:
+            self.preview_hub.view_hub.main.listener_hub.post_event(
+                PyTransEvent(
+                    PyTransEvent.Type.UI_UPDATE,
+                    self.preview_hub.UpdateSignal.UPDATE_FOCUS,
+                    self.capture_node,
+                )
+            )
         return 1
 
     def item_will_unselected(self):
@@ -101,13 +109,17 @@ class CaptureBoxItem(QGraphicsRectItem):
         self.update_box_preview(unmount=True)
         # after
 
-        # TODO: Make it to event
-        # test_pipe = self.preview_hub.view_hub.main.controller_hub.pipeline_hub.pipeline_nodes[0]
-        # test_pipe.process_node(self.capture_node,update_flag=True)
-
         for item in self.resize_icons:
             item.setVisible(False)
         self.setBrush(QColor(0, 0, 0, 0))
+        if not self.preview_hub.passive_mode:
+            self.preview_hub.view_hub.main.listener_hub.post_event(
+                PyTransEvent(
+                    PyTransEvent.Type.UI_UPDATE,
+                    self.preview_hub.UpdateSignal.UPDATE_FOCUS,
+                    None,
+                )
+            )
         return 0
 
     def sync_to_model(self):

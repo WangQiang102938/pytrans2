@@ -17,10 +17,11 @@ if TYPE_CHECKING:
 class ViewController:
     class UpdateSignal(Enum):
         UPDATE_ALL = auto()
-        UPDATE_FOCUS = lambda x: x if isinstance(x, CaptureNode) else None
+        UPDATE_FOCUS = auto()
 
     def __init__(self, view_hub: "ViewHub") -> None:
         self.view_hub = view_hub
+        self.passive_mode = False
 
     def update(self, signal=UpdateSignal.UPDATE_ALL, *args, **kwargs):
         pass
@@ -42,4 +43,6 @@ class ViewHub:
         self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs
     ):
         for view_ctrler in self.view_controllers:
-            view_ctrler.update(signal,*args, **kwargs)
+            view_ctrler.passive_mode = True
+            view_ctrler.update(signal, *args, **kwargs)
+            view_ctrler.passive_mode = False
