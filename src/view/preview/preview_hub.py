@@ -32,7 +32,7 @@ class PreviewHub:
         self.gview.setScene(self.scene)
         self.capture_gview.setScene(self.capture_preview_scene)
         ui = self.view_hub.ui
-
+        # zoom
         ui.zoomFitButton.clicked.connect(lambda x: self.zoom())
         ui.zoomInButton.clicked.connect(lambda x: self.zoom(True))
         ui.zoomOutButton.clicked.connect(lambda x: self.zoom(False))
