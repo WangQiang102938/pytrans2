@@ -3,6 +3,7 @@ from listener.listener_hub import PyTransEvent
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import PyTransApp
+import uuid
 
 class ModelHub:
     def __init__(self,main:'PyTransApp') -> None:
@@ -20,3 +21,6 @@ class ModelHub:
                 PyTransEvent(PyTransEvent.Type.UI_UPDATE)
             )
 
+class SqliteModel:
+    def __init__(self) -> None:
+        self.uuid=uuid.uuid1()
