@@ -33,6 +33,8 @@ class GoogleTranslateWidget(QFrame):
         self.api_key_edit= FormItem(self).setup(
             'Api Key',self.main_layout
         ).add_content(QLineEdit())
+        # TODO: REMOVE after saving func
+        self.api_key_edit.setText("AIzaSyChnruvHGwwc9s0svK9HgTQd1TL_hG0anQ")
 
         self.char_limit_edit= FormItem(self).setup(
             'Max chars size',self.main_layout

@@ -11,6 +11,8 @@ img {
     left: auto;
     right: auto; */
     width: inherit;
+    max-height: 90vh;
+    object-fit: contain;
 }
 
 td {

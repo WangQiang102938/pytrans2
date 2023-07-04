@@ -45,7 +45,7 @@ class DefaultUIUpdate(Listener):
         return super().event_handler(event)
 
 
-class SignalUIUpdate(Listener):
+class SignalUIUpdate_WithCapNode(Listener):
     def listened_event(self, event: PyTransEvent) -> bool:
         if event.type != event.Type.UI_UPDATE:
             return False
@@ -60,6 +60,22 @@ class SignalUIUpdate(Listener):
         if working_doc == None:
             return
         self.main.view_hub.update_all(event.args[0], event.args[1])
+        self.main.mainwindow_event_obj.force_run(QResizeEvent(QSize(), QSize()))
+
+        return super().event_handler(event)
+
+
+class SignalUIUpdate(Listener):
+    def listened_event(self, event: PyTransEvent) -> bool:
+        if event.type != event.Type.UI_UPDATE:
+            return False
+        if event.args.__len__() != 1:
+            return False
+        signal_type_check = event.args[0] in ViewController.UpdateSignal
+        return signal_type_check
+
+    def event_handler(self, event: PyTransEvent):
+        self.main.view_hub.update_all(event.args[0])
         self.main.mainwindow_event_obj.force_run(QResizeEvent(QSize(), QSize()))
 
         return super().event_handler(event)

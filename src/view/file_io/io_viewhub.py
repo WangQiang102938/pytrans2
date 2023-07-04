@@ -69,6 +69,6 @@ class IOViewhub(ViewController):
             PyTransEvent(PyTransEvent.Type.UI_UPDATE)
         )
 
-    def update(self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs):
-        if signal == ViewController.UpdateSignal.UPDATE_ALL:
+    def update(self, signal=ViewController.UpdateSignal.DEFAULT, *args, **kwargs):
+        if signal == ViewController.UpdateSignal.DEFAULT:
             self.update_opened_doc()

@@ -16,14 +16,15 @@ if TYPE_CHECKING:
 
 class ViewController:
     class UpdateSignal(Enum):
-        UPDATE_ALL = auto()
+        DEFAULT = auto()
         UPDATE_FOCUS = auto()
+        CONFIG_RELOAD = auto()
 
     def __init__(self, view_hub: "ViewHub") -> None:
         self.view_hub = view_hub
         self.passive_mode = False
 
-    def update(self, signal=UpdateSignal.UPDATE_ALL, *args, **kwargs):
+    def update(self, signal=UpdateSignal.DEFAULT, *args, **kwargs):
         pass
 
 
@@ -39,9 +40,7 @@ class ViewHub:
         # self.pipe_viewhub = PipelineViewhub(self)
         # self.io_viewhub = IOViewhub(self)
 
-    def update_all(
-        self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs
-    ):
+    def update_all(self, signal=ViewController.UpdateSignal.DEFAULT, *args, **kwargs):
         for view_ctrler in self.view_controllers:
             view_ctrler.passive_mode = True
             view_ctrler.update(signal, *args, **kwargs)

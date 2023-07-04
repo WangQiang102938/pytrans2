@@ -133,8 +133,8 @@ class PreviewHub(ViewController):
 
         return valid_flag_1
 
-    def update(self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs):
-        if signal == ViewController.UpdateSignal.UPDATE_ALL:
+    def update(self, signal=ViewController.UpdateSignal.DEFAULT, *args, **kwargs):
+        if signal == ViewController.UpdateSignal.DEFAULT:
             working_doc = self.view_hub.main.model_hub.working_doc
             # preview cleanup
             for item in self.scene.items():

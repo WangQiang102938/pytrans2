@@ -143,7 +143,9 @@ class HtmlGenV1(PipelineNode):
         # if aligned_txt == None:
         #     return
 
-        html_row = self.gen_html(image, aligned_txt)
+        html_row = self.gen_html(
+            image, aligned_txt if node.get_node_type() != node.Type.IMAGE else None
+        )
 
         memo.id_img_dict[str(id(image))] = image
         memo.html_txts += [html_row.to_html()]
@@ -155,8 +157,13 @@ class HtmlGenV1(PipelineNode):
             ext = self.option_widget.image_ext_combo.currentData()
             image.save(buffer, format=ext)
             img_src = f'src="data:image/{ext};base64, {base64.b64encode(buffer.getvalue()).decode("utf-8")}"'
+        img_only_flag = image != None and aligned_txt == None
         html_row = SimpleHTMLTag("tr", args='class="capture-row"').chain_content(
-            SimpleHTMLTag("td", args='class="capture-image-td"').chain_content(
+            SimpleHTMLTag(
+                "td",
+                args='class="capture-image-td"'
+                + (' colspan="2"' if img_only_flag else ""),
+            ).chain_content(
                 SimpleHTMLTag("div", args='class="capture-clip-div"').chain_content(
                     SimpleHTMLTag(
                         "img",

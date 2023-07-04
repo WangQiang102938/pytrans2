@@ -23,6 +23,7 @@ class PipelineEditFlag(Enum):
     REMOVE_NODE = auto()
     BRING_UP = auto()
     BRING_DOWN = auto()
+    UPDATE = auto()
 
 
 class PipelineViewhub(ViewController):
@@ -51,6 +52,15 @@ class PipelineViewhub(ViewController):
         self.ui.pipeEditList.currentRowChanged.connect(self.pipe_edit_changed)
         self.ui.pipeRunBtn.clicked.connect(self.pipeline_run)
         self.current_link_widget = PipeLinkEditWidget().bind(self)
+        self.view_hub.main.regist_post_init(self.post_init)
+
+    def post_init(self):
+        self.ui.pipeConfigSaveBtn.clicked.connect(
+            self.view_hub.main.controller_hub.pipeline_hub.save_pipe_config
+        )
+        self.ui.pipeConfigLoadBtn.clicked.connect(
+            self.view_hub.main.controller_hub.pipeline_hub.load_pipe_config
+        )
 
     def pipeline_edit(self, flag: "PipelineEditFlag"):
         pipeEditList_widget = self.ui.pipeEditList
@@ -60,31 +70,32 @@ class PipelineViewhub(ViewController):
         curr_edit_listitem = pipeEditList_widget.currentItem()
         curr_option_listitem = self.ui.pipeOptionViewList.currentItem()
 
-        if flag == PipelineEditFlag.ADD_NODE:
-            curr_pipenode_cls: Type[
-                PipelineNode
-            ] = self.ui.pipeAvaliableCombo.currentData()
-            tmp_pipenode_cls = curr_pipenode_cls(self.pipeline_ctrlhub)
-            pipeline_node_ins_list.append(tmp_pipenode_cls)
-        else:
-            if curr_edit_listitem == None:
-                return
-            curr_ins: PipelineNode = pipeEditList_widget.currentItem().data(
-                Qt.ItemDataRole.UserRole
-            )
-            assert curr_ins in pipeline_node_ins_list
-            if flag == PipelineEditFlag.REMOVE_NODE:
-                pipeline_node_ins_list.remove(curr_ins)
-            elif flag == PipelineEditFlag.BRING_UP:
-                curr_index = pipeline_node_ins_list.index(curr_ins)
-                my_utils.swap_list_item(
-                    pipeline_node_ins_list, curr_index, curr_index - 1
+        if flag != PipelineEditFlag.UPDATE:
+            if flag == PipelineEditFlag.ADD_NODE:
+                curr_pipenode_cls: Type[
+                    PipelineNode
+                ] = self.ui.pipeAvaliableCombo.currentData()
+                tmp_pipenode_cls = curr_pipenode_cls(self.pipeline_ctrlhub)
+                pipeline_node_ins_list.append(tmp_pipenode_cls)
+            else:
+                if curr_edit_listitem == None:
+                    return
+                curr_ins: PipelineNode = pipeEditList_widget.currentItem().data(
+                    Qt.ItemDataRole.UserRole
                 )
-            elif flag == PipelineEditFlag.BRING_DOWN:
-                curr_index = pipeline_node_ins_list.index(curr_ins)
-                my_utils.swap_list_item(
-                    pipeline_node_ins_list, curr_index, curr_index + 1
-                )
+                assert curr_ins in pipeline_node_ins_list
+                if flag == PipelineEditFlag.REMOVE_NODE:
+                    pipeline_node_ins_list.remove(curr_ins)
+                elif flag == PipelineEditFlag.BRING_UP:
+                    curr_index = pipeline_node_ins_list.index(curr_ins)
+                    my_utils.swap_list_item(
+                        pipeline_node_ins_list, curr_index, curr_index - 1
+                    )
+                elif flag == PipelineEditFlag.BRING_DOWN:
+                    curr_index = pipeline_node_ins_list.index(curr_ins)
+                    my_utils.swap_list_item(
+                        pipeline_node_ins_list, curr_index, curr_index + 1
+                    )
 
         def index_from_item(item: QListWidgetItem):
             ins = None if item == None else item.data(Qt.ItemDataRole.UserRole)
@@ -124,3 +135,10 @@ class PipelineViewhub(ViewController):
         self.view_hub.main.listener_hub.post_event(
             PyTransEvent(PyTransEvent.Type.PIPELINE_RUN)
         )
+
+    def update(self, signal=ViewController.UpdateSignal.DEFAULT, *args, **kwargs):
+        if signal == ViewController.UpdateSignal.CONFIG_RELOAD:
+            self.pipeline_edit(PipelineEditFlag.UPDATE)
+        self.pipe_edit_changed(-1)
+        self.pipe_option_changed(-1)
+        return super().update(signal, *args, **kwargs)

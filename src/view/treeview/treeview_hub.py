@@ -40,7 +40,7 @@ class TreeViewHub(ViewController):
         self.id2node = dict[int, CaptureNode]()
         self.id2item = dict[int, QTreeWidgetItem]()
 
-    def update(self, signal=ViewController.UpdateSignal.UPDATE_ALL, *args, **kwargs):
+    def update(self, signal=ViewController.UpdateSignal.DEFAULT, *args, **kwargs):
         def dfs(node: CaptureNode, tree_item=QTreeWidgetItem(), depth=0):
             for child in node.children:
                 child_item = dfs(
@@ -57,7 +57,7 @@ class TreeViewHub(ViewController):
             tree_item.setExpanded(True)
             return tree_item
 
-        if signal == ViewController.UpdateSignal.UPDATE_ALL:
+        if signal == ViewController.UpdateSignal.DEFAULT:
             working_doc = self.view_hub.main.model_hub.working_doc
             if working_doc == None:
                 return
