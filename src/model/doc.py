@@ -1,18 +1,23 @@
-from sqlalchemy import Column, Integer, String, UUID, BINARY, Double
+from sqlalchemy import Column, Integer, String, UUID, BINARY, Double, DateTime
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
+from sqlalchemy.orm import sessionmaker
 import sqlalchemy
 from enum import Enum, auto
 from typing import Type
 from PIL.Image import Image
-
+import uuid
 from model.capture.capture_node import CaptureNode
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from controller.io.io_hub import IOMemo
+import datetime
 
 
 class WorkingDoc:
-    def __init__(self, path=None, url=None) -> None:
+    def default_doc(): return WorkingDoc(
+        db_path=f"./tmp/{uuid.uuid1().__str__()}.db")
+
+    def __init__(self, path=None, url=None, db_path="") -> None:
         self.path = path
         self.url = url
         self.filehash = None
@@ -22,6 +27,15 @@ class WorkingDoc:
         self.focus_node = self.root_node
         self.status = self.STATUS.NOT_AVALIABLE
         self.page_no = 0
+
+        self.db_path = db_path
+        self.db_engine = sqlalchemy.create_engine(f"sqlite:///{self.db_path}")
+        self.sessionmaker = sessionmaker(bind=self.db_engine)
+
+        ORMBase.metadata.create_all(self.db_engine)
+
+    def gen_session(self):
+        return self.sessionmaker()
 
     class STATUS(Enum):
         NOT_AVALIABLE = auto()
@@ -48,6 +62,8 @@ class KeyValORM(ORMBase):
     key = Column(String, nullable=False)
     str_val = Column(String, nullable=True)
     raw_val = Column(BINARY)
+    date_c = Column(DateTime(), default=datetime.datetime.now)
+    date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
 
 class CaptureORM(ORMBase):
@@ -56,6 +72,8 @@ class CaptureORM(ORMBase):
     uuid = Column(UUID, primary_key=True)
     parent_uuid = Column(UUID)
     node_type = Column(String)
+    date_c = Column(DateTime(), default=datetime.datetime.now)
+    date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
 
 class VisualORM(ORMBase):
@@ -68,6 +86,8 @@ class VisualORM(ORMBase):
     bottom = Column(Double)
     left = Column(Double)
     right = Column(Double)
+    date_c = Column(DateTime(), default=datetime.datetime.now)
+    date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
 
 class MemoORM(ORMBase):
@@ -78,3 +98,5 @@ class MemoORM(ORMBase):
     memo_identifier = Column(String)
     str_val = Column(String, nullable=True)
     raw_val = Column(BINARY, nullable=True)
+    date_c = Column(DateTime(), default=datetime.datetime.now)
+    date_m = Column(DateTime(), onupdate=datetime.datetime.now)

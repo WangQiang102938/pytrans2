@@ -73,6 +73,7 @@ class LocalPDFModule(IOModule):
             return True
         except Exception as e:
             return False
+                
 
 
 class ModuleWidget(QFrame):

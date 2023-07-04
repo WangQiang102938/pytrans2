@@ -1,10 +1,12 @@
+import pickle
 from enum import Enum, auto
 from typing import Callable
-from model.doc import WorkingDoc
+import uuid
+from model.doc import MemoORM, WorkingDoc
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-
+from PIL.Image import Image
 from typing import TYPE_CHECKING
 
 import my_utils
@@ -26,6 +28,10 @@ class IOHub:
             my_utils.split_dir_from_file(__file__), IOModule
         )
         self.io_modules = [x(self) for x in io_module_clses]
+        renderer_clses = my_utils.scan_class(
+            my_utils.split_dir_from_file(__file__), IOModule
+        )
+        self.renderes = [x(self) for x in renderer_clses]
         for module in self.io_modules:
             ui.ioModuleTab.addTab(module.get_widget(), module.get_title())
 
@@ -53,6 +59,22 @@ class IOModule:
         return "NO TITLE"
 
     def save_source_to(self, path: str, working_doc: WorkingDoc):
+        pass
+
+    def get_binary(self):
+        pass
+
+    def save_memo(self,working_doc:WorkingDoc,identifier:str,raw_data:bytes):
+        session=working_doc.sessionmaker()
+        tmp_memo_orm=MemoORM(
+            uuid=uuid.uuid1()
+        )
+
+class Renderer:
+    def __init__(self, io_hub: IOHub) -> None:
+        self.io_hub = io_hub
+
+    def render(self, binary: bytes) -> list[Image]:
         pass
 
 
