@@ -1,3 +1,7 @@
+from sqlalchemy import Column, Integer, String, create_engine
+import sqlalchemy.orm
+import sqlalchemy
+from sqlalchemy.ext.declarative import declarative_base
 from enum import Enum, auto
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
@@ -25,6 +29,26 @@ from sqlalchemy import Column, Integer, LargeBinary, String, ForeignKey
 
 Base: DeclarativeMeta = declarative_base()
 T = TypeVar("T")
+ModelBase = declarative_base()
+
+
+class PipelineListRecord(ModelBase):
+    __tablename__ = 'PipelineList'
+
+    id = Column(Integer, primary_key=True)
+    index = Column(Integer)
+    type_name = Column(String(length=128))
+    uuid = Column(String(length=256))
+
+
+class LinkRecord(ModelBase):
+    __tabname__ = 'PipeLinkList'
+
+    id = Column(Integer, primary_key=True)
+    out_uuid = Column(String(length=256))
+    out_key = Column(String(length=64))
+    in_uuid = Column(String(length=256))
+    in_key = Column(String(length=64))
 
 
 class PipelineHub:
