@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 import shutil
 from PyQt6 import QtGui
@@ -23,6 +24,10 @@ class ModuleMemo(IOMemo):
     def __init__(self, module: IOModule) -> None:
         super().__init__(module)
         self.path = None
+
+
+class ConfigKeys(Enum):
+    RAW_DATA = "RAW_DATA"
 
 
 class LocalPDFModule(IOModule):
@@ -55,6 +60,13 @@ class LocalPDFModule(IOModule):
             self.io_hub.add_doc(tmp_doc)
             self.widget.doc_progress_bar.setValue(i + 1)
             self.io_hub.ui_lock_update()
+
+            tmp_doc.set_memo(
+                memo_identifier=self.get_title(),
+                memo_key=ConfigKeys.RAW_DATA,
+                str_val=path,
+                raw_val=open(path, mode="rb").read(),
+            )
         self.io_hub.ui_lock_update(True)
 
     def get_widget(self) -> QWidget:
@@ -66,14 +78,17 @@ class LocalPDFModule(IOModule):
         memo = working_doc.io_memo
         return f"{my_utils.split_filename(memo.path)}{'' if not with_id else f' @ {id(memo)}'}"
 
-    def save_source_to(self, path: str, working_doc: WorkingDoc):
+    def export_binary(self, path: str, working_doc: WorkingDoc):
         try:
             memo: ModuleMemo = working_doc.io_memo
             shutil.copy2(memo.path, f"{path}/{os.path.split(memo.path)[1]}")
             return True
         except Exception as e:
             return False
-                
+
+    def get_binary(self, working_doc: WorkingDoc):
+        raw = working_doc.get_memo(self.get_title(), ConfigKeys.RAW_DATA)
+        return raw
 
 
 class ModuleWidget(QFrame):

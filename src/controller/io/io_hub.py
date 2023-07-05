@@ -21,6 +21,10 @@ class IOHub:
         LOCAL_PDF = auto()
         ONLINE_PDF = auto()
 
+    class ConfigKey(Enum):
+        VALID_IOMODULE = "VALID_IOMODULE"
+        VALID_RENDERER = "VALID_RENDERER"
+
     def __init__(self, ctrl_hub: "ControllerHub") -> None:
         self.ctrl_hub = ctrl_hub
         ui = self.ctrl_hub.ui
@@ -44,6 +48,26 @@ class IOHub:
             main.mainwindow.setEnabled(enable)
         main.app.processEvents()
 
+    def set_valid_iomodule(self, working_doc: WorkingDoc, io_module: "IOModule"):
+        working_doc.set_orm(
+            working_doc.ORM.KeyVal(
+                key=self.ConfigKey.VALID_IOMODULE, str_val=io_module.get_title()
+            )
+        )
+
+    def get_valid_iomodule(self, working_doc: WorkingDoc):
+        result = (
+            working_doc.get_orm_session(working_doc.ORM.KeyVal)
+            .filter_by(key=self.ConfigKey.VALID_IOMODULE)
+            .first()
+        )
+        if result == None:
+            return None
+        for io_module in self.io_modules:
+            if io_module.get_title() == result.str_val:
+                return io_module
+        return None
+
 
 class IOModule:
     def __init__(self, io_hub: IOHub) -> None:
@@ -58,23 +82,18 @@ class IOModule:
     def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
         return "NO TITLE"
 
-    def save_source_to(self, path: str, working_doc: WorkingDoc):
+    def export_binary(self, path: str, working_doc: WorkingDoc):
         pass
 
-    def get_binary(self):
+    def get_binary(self, working_doc: WorkingDoc):
         pass
 
-    def save_memo(self,working_doc:WorkingDoc,identifier:str,raw_data:bytes):
-        session=working_doc.sessionmaker()
-        tmp_memo_orm=MemoORM(
-            uuid=uuid.uuid1()
-        )
 
 class Renderer:
     def __init__(self, io_hub: IOHub) -> None:
         self.io_hub = io_hub
 
-    def render(self, binary: bytes) -> list[Image]:
+    def render(self, binary: bytes, use_cache=True) -> list[Image]:
         pass
 
 

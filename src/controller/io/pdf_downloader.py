@@ -1,3 +1,4 @@
+from enum import Enum
 from io import BytesIO
 import os
 from PyQt6 import QtGui
@@ -20,6 +21,10 @@ import requests
 
 if TYPE_CHECKING:
     from controller.io.io_hub import IOHub
+
+
+class ConfigKeys(Enum):
+    RAW_DATA = "RAW_DATA"
 
 
 class ModuleWidget(QFrame):
@@ -107,12 +112,19 @@ class PDFDownloader(IOModule):
             tmp_memo.url = self.widget.url_edit.text()
             tmp_memo.buffer = buffer
             self.io_hub.add_doc(tmp_doc)
+
+            tmp_doc.set_memo(
+                memo_identifier=self.get_title(),
+                memo_key=ConfigKeys.RAW_DATA,
+                str_val=self.widget.url_edit.text(),
+                raw_val=buffer.getvalue(),
+            )
         except Exception as e:
             pass
         finally:
             self.io_hub.ui_lock_update(True)
 
-    def save_source_to(self, path: str, working_doc: WorkingDoc):
+    def export_binary(self, path: str, working_doc: WorkingDoc):
         try:
             memo: ModuleMemo = working_doc.io_memo
             filepath = f"{path}/{self.get_doc_title(working_doc)}.pdf"
@@ -121,6 +133,10 @@ class PDFDownloader(IOModule):
             return True
         except Exception as e:
             return False
+
+    def get_binary(self, working_doc: WorkingDoc):
+        res: bytes = working_doc.get_memo(self.get_title(), ConfigKeys.RAW_DATA)
+        return None if res == None else res
 
     def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
         try:

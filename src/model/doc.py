@@ -7,56 +7,19 @@ from typing import Type
 from PIL.Image import Image
 import uuid
 from model.capture.capture_node import CaptureNode
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
+
 if TYPE_CHECKING:
     from controller.io.io_hub import IOMemo
 import datetime
 
-
-class WorkingDoc:
-    def default_doc(): return WorkingDoc(
-        db_path=f"./tmp/{uuid.uuid1().__str__()}.db")
-
-    def __init__(self, path=None, url=None, db_path="") -> None:
-        self.path = path
-        self.url = url
-        self.filehash = None
-        self.io_memo: IOMemo = None
-        self.page_cache = list[Image]()
-        self.root_node = CaptureNode(self, CaptureNode.Type.ROOT)
-        self.focus_node = self.root_node
-        self.status = self.STATUS.NOT_AVALIABLE
-        self.page_no = 0
-
-        self.db_path = db_path
-        self.db_engine = sqlalchemy.create_engine(f"sqlite:///{self.db_path}")
-        self.sessionmaker = sessionmaker(bind=self.db_engine)
-
-        ORMBase.metadata.create_all(self.db_engine)
-
-    def gen_session(self):
-        return self.sessionmaker()
-
-    class STATUS(Enum):
-        NOT_AVALIABLE = auto()
-        NORMAL = auto()
-
-    def reload(self, pages: list[Image]):
-        self.page_cache = pages
-        if not isinstance(pages, list) or pages.__len__() == 0:
-            self.status = self.STATUS.NOT_AVALIABLE
-        else:
-            self.status = self.STATUS.NORMAL
-        self.page_no = 0
-        self.focus_node = self.root_node = CaptureNode(
-            self, CaptureNode.Type.ROOT)
-
-
 ORMBase: DeclarativeMeta = declarative_base()
+
+T = TypeVar("T", bound=DeclarativeMeta)
 
 
 class KeyValORM(ORMBase):
-    __tablename__ = 'PyTransDoc'
+    __tablename__ = "PyTransDoc"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String, nullable=False)
@@ -96,7 +59,106 @@ class MemoORM(ORMBase):
     uuid = Column(UUID, primary_key=True)
     capture_uuid = Column(UUID, nullable=True)
     memo_identifier = Column(String)
+    memo_key = Column(String)
     str_val = Column(String, nullable=True)
     raw_val = Column(BINARY, nullable=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
+
+
+class WorkingDoc:
+    class ORM:
+        KeyVal = KeyValORM
+        Memo = MemoORM
+        Visual = VisualORM
+        Capture = CaptureORM
+
+    def default_doc():
+        return WorkingDoc(db_path=f"./tmp/{uuid.uuid1().__str__()}.db")
+
+    def __init__(self, path=None, url=None, db_path="") -> None:
+        self.path = path
+        self.url = url
+        self.filehash = None
+        self.io_memo: IOMemo = None
+        self.page_cache = list[Image]()
+        self.root_node = CaptureNode(self, CaptureNode.Type.ROOT)
+        self.focus_node = self.root_node
+        self.status = self.STATUS.NOT_AVALIABLE
+        self.page_no = 0
+
+        self.db_path = db_path
+        self.db_engine = sqlalchemy.create_engine(f"sqlite:///{self.db_path}")
+        self.sessionmaker = sessionmaker(bind=self.db_engine)
+
+        ORMBase.metadata.create_all(self.db_engine)
+        self.session = self.gen_session()
+
+    def gen_session(self):
+        return self.sessionmaker()
+
+    class STATUS(Enum):
+        NOT_AVALIABLE = auto()
+        NORMAL = auto()
+
+    def reload(self, pages: list[Image]):
+        self.page_cache = pages
+        if not isinstance(pages, list) or pages.__len__() == 0:
+            self.status = self.STATUS.NOT_AVALIABLE
+        else:
+            self.status = self.STATUS.NORMAL
+        self.page_no = 0
+        self.focus_node = self.root_node = CaptureNode(self, CaptureNode.Type.ROOT)
+
+    def set_orm(self, orm_obj: DeclarativeMeta):
+        try:
+            self.session.merge(orm_obj)
+            self.session.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def get_orm_session(self, orm_cls: Type[T]):
+        try:
+            return self.session.query(orm_cls)
+        except Exception:
+            return None
+
+    def set_memo(
+        self,
+        memo_identifier: str,
+        memo_key: str,
+        cap_uuid: uuid.UUID = None,
+        str_val="",
+        raw_val: bytes = None,
+    ):
+        self.set_orm(
+            self.ORM.Memo(
+                memo_identifier=memo_identifier,
+                memo_key=memo_key,
+                str_val=str_val,
+                raw_val=raw_val,
+            )
+        )
+
+    def get_memo(
+        self,
+        memo_identifier: str,
+        memo_key: str,
+        cap_uuid: uuid.UUID = None,
+        str_mode=False,
+        both_mode=False,
+    ):
+        result = (
+            self.get_orm_session(self.ORM.Memo)
+            .filter_by(
+                memo_identifier=memo_identifier, memo_key=memo_key, cap_uuid=cap_uuid
+            )
+            .first()
+        )
+        if result == None or (str_mode == False and both_mode == False):
+            return None
+        if both_mode:
+            return result.str_val, result.raw_val
+        return result.str_val if str_mode else result.raw_val

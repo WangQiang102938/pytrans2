@@ -298,7 +298,7 @@ class HtmlGenV1(PipelineNode):
             # save
             # save source
             if self.option_widget.save_src_btn.isChecked():
-                working_doc.io_memo.io_module.save_source_to(saving_path, working_doc)
+                working_doc.io_memo.io_module.export_binary(saving_path, working_doc)
             # save html
             html_path = f"{saving_path}/{title}.html"
             with open(html_path, "w") as f:
