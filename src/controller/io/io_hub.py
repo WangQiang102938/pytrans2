@@ -28,16 +28,24 @@ class IOHub:
     def __init__(self, ctrl_hub: "ControllerHub") -> None:
         self.ctrl_hub = ctrl_hub
         ui = self.ctrl_hub.ui
+        # iomodule
         io_module_clses = my_utils.scan_class(
             my_utils.split_dir_from_file(__file__), IOModule
         )
         self.io_modules = [x(self) for x in io_module_clses]
+        self.io_modules_uuid = {x.uuid: x for x in self.io_modules}
+        # renderer
         renderer_clses = my_utils.scan_class(
-            my_utils.split_dir_from_file(__file__), IOModule
+            my_utils.split_dir_from_file(__file__), Renderer
         )
         self.renderes = [x(self) for x in renderer_clses]
+        self.renderes_uuid = {x.uuid: x for x in self.renderes}
+        # ui setup
         for module in self.io_modules:
             ui.ioModuleTab.addTab(module.get_widget(), module.get_title())
+        for renderer in self.renderes:
+            ui.rendererSelectCombo.addItem(renderer.get_title(), renderer)
+        ui.rendererSelectCombo.setCurrentIndex(0)
 
     def add_doc(self, doc: WorkingDoc, set_to_work_flag=True):
         self.ctrl_hub.main.model_hub.add_doc(doc)
@@ -51,14 +59,14 @@ class IOHub:
     def set_valid_iomodule(self, working_doc: WorkingDoc, io_module: "IOModule"):
         working_doc.set_orm(
             working_doc.ORM.KeyVal(
-                key=self.ConfigKey.VALID_IOMODULE, str_val=io_module.get_title()
+                key=self.ConfigKey.VALID_IOMODULE.value, str_val=io_module.get_title()
             )
         )
 
     def get_valid_iomodule(self, working_doc: WorkingDoc):
         result = (
             working_doc.get_orm_session(working_doc.ORM.KeyVal)
-            .filter_by(key=self.ConfigKey.VALID_IOMODULE)
+            .filter_by(key=self.ConfigKey.VALID_IOMODULE.value)
             .first()
         )
         if result == None:
@@ -72,6 +80,7 @@ class IOHub:
 class IOModule:
     def __init__(self, io_hub: IOHub) -> None:
         self.io_hub = io_hub
+        self.uuid = uuid.uuid1()
 
     def get_widget(self) -> QWidget:
         pass
@@ -92,6 +101,7 @@ class IOModule:
 class Renderer:
     def __init__(self, io_hub: IOHub) -> None:
         self.io_hub = io_hub
+        self.uuid = uuid.uuid1()
 
     def get_title(self):
         return self.__class__.__name__

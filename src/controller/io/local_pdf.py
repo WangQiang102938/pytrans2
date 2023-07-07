@@ -5,7 +5,7 @@ from PyQt6 import QtGui
 from PyQt6.QtWidgets import QWidget
 from pypdfium2 import PdfDocument
 from model.doc import WorkingDoc
-from controller.io.io_hub import IOMemo, IOModule
+from controller.io.io_hub import IOMemo, IOModule, Renderer
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -41,49 +41,81 @@ class LocalPDFModule(IOModule):
         if io_hub != None:
             LocalPDFModule.valid_ins = self
 
-    def open(self, path_list: list[str]):
+    def open_multi(self, path_list: list[str]):
         if not isinstance(path_list, list):
             return
         self.io_hub.ui_lock_update(False)
         self.widget.doc_progress_bar.setRange(0, len(path_list))
         for i, path in enumerate(path_list):
             self.widget.doc_progress_bar.setValue(i)
-            rendered_pages = io_utils.load_local_pdf(
-                path, self.widget.progress_call, self.widget.scale_spin.value()
-            )
-            if rendered_pages == None:
-                print("Load PDF Failed")
-                continue
-            tmp_doc = WorkingDoc()
-            tmp_memo = ModuleMemo(self)
-            tmp_memo.path = path
-            tmp_doc.io_memo = tmp_memo
-            tmp_doc.reload(rendered_pages)
-            self.io_hub.add_doc(tmp_doc)
+            self.io_hub.ui_lock_update()
+            # rendered_pages = io_utils.load_local_pdf(
+            #     path, self.widget.progress_call, self.widget.scale_spin.value()
+            # )
+            # if rendered_pages == None:
+            #     print("Load PDF Failed")
+            #     continue
+            # tmp_doc = WorkingDoc()
+            # tmp_memo = ModuleMemo(self)
+            # tmp_memo.path = path
+            # tmp_doc.io_memo = tmp_memo
+            # tmp_doc.reload(rendered_pages)
+            # self.io_hub.add_doc(tmp_doc)
+
+            # tmp_doc.set_memo(
+            #     memo_identifier=self.get_title(),
+            #     memo_key=ConfigKeys.RAW_DATA,
+            #     str_val=path,
+            #     raw_val=open(path, mode="rb").read(),
+            # )
+
+            if not self.open(path):
+                print(f"Fail to open local PDF: {path}")
+
             self.widget.doc_progress_bar.setValue(i + 1)
             self.io_hub.ui_lock_update()
-
-            tmp_doc.set_memo(
-                memo_identifier=self.get_title(),
-                memo_key=ConfigKeys.RAW_DATA,
-                str_val=path,
-                raw_val=open(path, mode="rb").read(),
-            )
         self.io_hub.ui_lock_update(True)
+
+    def open(self, path: str):
+        ui = self.io_hub.ctrl_hub.ui
+        try:
+            binary_data = open(path, "rb").read()
+            renderer: Renderer = ui.rendererSelectCombo.currentData(
+                Qt.ItemDataRole.UserRole
+            )
+            tmp_doc = WorkingDoc.default_doc()
+            rendered_pages = renderer.render(tmp_doc, binary_data, False)
+            tmp_doc.set_memo(
+                self.get_title(),
+                ConfigKeys.RAW_DATA.value,
+                str_val=path,
+                raw_val=binary_data,
+            )
+            tmp_doc.doc_title(set_new_title=f"{my_utils.split_filename(path)}")
+            self.io_hub.set_valid_iomodule(tmp_doc, self)
+            tmp_doc.reload(rendered_pages)
+            self.io_hub.add_doc(tmp_doc)
+            return True
+        except Exception as e:
+            print(e)
+            tmp_doc.delete_me()
+            return False
 
     def get_widget(self) -> QWidget:
         return self.widget
 
     def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
-        if not isinstance(working_doc.io_memo, ModuleMemo):
-            return super().get_doc_title(working_doc)
-        memo = working_doc.io_memo
-        return f"{my_utils.split_filename(memo.path)}{'' if not with_id else f' @ {id(memo)}'}"
+        path: str = working_doc.get_memo(
+            self.get_title(), ConfigKeys.RAW_DATA.value, str_mode=True
+        )
+        if not isinstance(path, str):
+            return super().get_doc_title()
+        return f"{my_utils.split_filename(path)}{'' if not with_id else f' @ {id(working_doc)}'}"
 
     def export_binary(self, path: str, working_doc: WorkingDoc):
         try:
-            memo: ModuleMemo = working_doc.io_memo
-            shutil.copy2(memo.path, f"{path}/{os.path.split(memo.path)[1]}")
+            f = open(path, "wb")
+            f.write(self.get_binary())
             return True
         except Exception as e:
             return False
@@ -106,7 +138,7 @@ class ModuleWidget(QFrame):
         self.main_btn = qt_utils.add_to_layout(
             setting_layout, ModuleBtn("Open PDFs or drop PDFs file here", self)
         )
-        self.main_btn.set_open_call(self.module.open)
+        self.main_btn.set_open_call(self.module.open_multi)
         self.main_btn.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,

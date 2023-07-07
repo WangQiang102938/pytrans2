@@ -1,9 +1,9 @@
-from sqlalchemy import Column, Integer, String, UUID, BINARY, Double, DateTime
+from sqlalchemy import Column, Integer, String, BINARY, Double, DateTime
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy
 from enum import Enum, auto
-from typing import Type
+from typing import Type, Union
 from PIL.Image import Image
 import uuid
 from model.capture.capture_node import CaptureNode
@@ -22,9 +22,9 @@ class KeyValORM(ORMBase):
     __tablename__ = "PyTransDoc"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    key = Column(String, nullable=False)
+    key = Column(String)
     str_val = Column(String, nullable=True)
-    raw_val = Column(BINARY)
+    raw_val = Column(BINARY, nullable=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
@@ -32,8 +32,8 @@ class KeyValORM(ORMBase):
 class CaptureORM(ORMBase):
     __tablename__ = "PyTransCapture"
 
-    uuid = Column(UUID, primary_key=True)
-    parent_uuid = Column(UUID)
+    uuid = Column(BINARY, primary_key=True)
+    parent_uuid = Column(BINARY)
     node_type = Column(String)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
@@ -42,8 +42,8 @@ class CaptureORM(ORMBase):
 class VisualORM(ORMBase):
     __tablename__ = "PyTransVisual"
 
-    uuid = Column(UUID, primary_key=True)
-    capture_uuid = Column(UUID)
+    uuid = Column(BINARY, primary_key=True)
+    capture_uuid = Column(BINARY)
     page_no = Column(Integer)
     top = Column(Double)
     bottom = Column(Double)
@@ -56,8 +56,8 @@ class VisualORM(ORMBase):
 class MemoORM(ORMBase):
     __tablename__ = "PyTransMemo"
 
-    uuid = Column(UUID, primary_key=True)
-    capture_uuid = Column(UUID, nullable=True)
+    uuid = Column(BINARY, primary_key=True, default=lambda: uuid.uuid1().bytes)
+    capture_uuid = Column(BINARY, nullable=True)
     memo_identifier = Column(String)
     memo_key = Column(String)
     str_val = Column(String, nullable=True)
@@ -72,6 +72,9 @@ class WorkingDoc:
         Memo = MemoORM
         Visual = VisualORM
         Capture = CaptureORM
+
+    class ConfigKeys(Enum):
+        DocTitle = "DocTitle"
 
     def default_doc():
         return WorkingDoc(db_path=f"./tmp/{uuid.uuid1().__str__()}.db")
@@ -125,6 +128,21 @@ class WorkingDoc:
         except Exception:
             return None
 
+    def set_kv(self, key: str, val: Union[str, bytes]):
+        is_str = isinstance(val, str)
+        is_bin = isinstance(val, bytes)
+        return self.set_orm(
+            KeyValORM(
+                key=key,
+                str_val=val if is_str else None,
+                raw_val=val if is_bin else None,
+            )
+        )
+
+    def get_kv_orm(self, key, all=False):
+        query = self.get_orm_session(KeyValORM).filter_by(key=key)
+        return query.all() if all else query.first()
+
     def set_memo(
         self,
         memo_identifier: str,
@@ -162,3 +180,16 @@ class WorkingDoc:
         if both_mode:
             return result.str_val, result.raw_val
         return result.str_val if str_mode else result.raw_val
+
+    def doc_title(self, set_new_title: str = None) -> str:
+        if isinstance(set_new_title, str):
+            self.set_kv(self.ConfigKeys.DocTitle.value, set_new_title)
+        return self.get_kv_orm(self.ConfigKeys.DocTitle.value).str_val
+
+    def delete_me(self):
+        try:
+            import os
+
+            os.remove(self.db_path, dir_fd=None)
+        except:
+            pass

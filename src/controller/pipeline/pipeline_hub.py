@@ -42,7 +42,7 @@ class PipelineListRecord(ModelBase):
 
 
 class LinkRecord(ModelBase):
-    __tabname__ = 'PipeLinkList'
+    __tablename__ = 'PipeLinkList'
 
     id = Column(Integer, primary_key=True)
     out_uuid = Column(String(length=256))
