@@ -24,10 +24,12 @@ class ModuleMemo(IOMemo):
     def __init__(self, module: IOModule) -> None:
         super().__init__(module)
         self.path = None
+        self.binary: bytes = None
 
 
 class ConfigKeys(Enum):
     RAW_DATA = "RAW_DATA"
+    MEMO_BODY = "MEMO_BODY"
 
 
 class LocalPDFModule(IOModule):

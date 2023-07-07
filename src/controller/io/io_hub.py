@@ -93,7 +93,15 @@ class Renderer:
     def __init__(self, io_hub: IOHub) -> None:
         self.io_hub = io_hub
 
-    def render(self, binary: bytes, use_cache=True) -> list[Image]:
+    def get_title(self):
+        return self.__class__.__name__
+
+    def render(
+        self, working_doc: WorkingDoc, binary: bytes, use_cache=True
+    ) -> list[Image]:
+        pass
+
+    def popup_setting(self):
         pass
 
 

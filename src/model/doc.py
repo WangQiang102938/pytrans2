@@ -133,7 +133,7 @@ class WorkingDoc:
         str_val="",
         raw_val: bytes = None,
     ):
-        self.set_orm(
+        return self.set_orm(
             self.ORM.Memo(
                 memo_identifier=memo_identifier,
                 memo_key=memo_key,
