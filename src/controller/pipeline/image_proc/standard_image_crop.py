@@ -56,7 +56,7 @@ class StandardCrop(PipelineNode):
         )
         memo.croped_image = node_img
         working_doc = node.working_doc
-        working_doc.sync_memo(
+        working_doc.merge_memo(
             self.uuid.hex,
             PortEnum.OUT_IMAGE.value,
             node.uuid,
@@ -65,7 +65,7 @@ class StandardCrop(PipelineNode):
 
     def get_output(self, node: CaptureNode, key: str):
         try:
-            orm_ins = node.working_doc.sync_memo(self.uuid.hex, key, node.uuid)
+            orm_ins = node.working_doc.merge_memo(self.uuid.hex, key, node.uuid)
             img_bin: bytes = orm_ins.raw_val
             img: Image = pickle.loads(img_bin)
             return None if not isinstance(img, Image) else img

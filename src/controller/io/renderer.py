@@ -66,7 +66,7 @@ class PDFRenderer(Renderer):
 
     def sync_cache(self, working_doc: WorkingDoc, cache: List[Image] = None):
         binary = None if cache == None else pickle.dumps(cache)
-        orm_ins = working_doc.sync_memo(
+        orm_ins = working_doc.merge_memo(
             self.get_title(), ConfigKeys.RENDER_CACHE.value, raw_val=binary
         )
         if cache != None:

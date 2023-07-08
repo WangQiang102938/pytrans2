@@ -65,7 +65,7 @@ class IOHub:
 
     def get_valid_iomodule(self, working_doc: WorkingDoc):
         result = (
-            working_doc.get_orm_session(working_doc.ORM.KeyVal)
+            working_doc.get_orm_query(working_doc.ORM.KeyVal)
             .filter_by(key=self.ConfigKey.VALID_IOMODULE.value)
             .first()
         )
@@ -110,7 +110,7 @@ class IOModule:
         return raw
 
     def sync_binary(self, working_doc: WorkingDoc, binary: bytes = None):
-        return working_doc.sync_memo(
+        return working_doc.merge_memo(
             self.get_title(), IOModule.ConfigKeys.IO_BINARY.value, raw_val=binary
         )
 

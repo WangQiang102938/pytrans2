@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from enum import Enum, auto
-from typing import Type, Union
+from typing import Callable, Type, Union
 from PIL.Image import Image
 import uuid
 from model.capture.capture_node import CaptureNode
@@ -42,10 +42,13 @@ class CaptureORM(ORMBase):
     __tablename__ = "PyTransCapture"
 
     _uuid = Column(BINARY, primary_key=True)
-    parent_uuid = Column(BINARY)
+    parent_uuid = Column(BINARY, nullable=True)
     node_type = Column(String)
+    seq = Column(Integer, autoincrement=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
-    date_m = Column(DateTime(), onupdate=datetime.datetime.now)
+    date_m = Column(
+        DateTime(), onupdate=datetime.datetime.now, default=datetime.datetime.now
+    )
 
     @classmethod
     def get_valid_ins(cls, session: Session, uuid: uuid.UUID, strict=True):
@@ -61,8 +64,7 @@ class CaptureORM(ORMBase):
 class VisualORM(ORMBase):
     __tablename__ = "PyTransVisual"
 
-    _uuid = Column(BINARY, primary_key=True)
-    capture_uuid = Column(BINARY)
+    capture_uuid = Column(BINARY, primary_key=True)
     page_no = Column(Integer)
     top = Column(Double)
     bottom = Column(Double)
@@ -124,6 +126,15 @@ class MemoORM(ORMBase):
         return ins
 
 
+class CapNodeType(Enum):
+    RAW = auto()
+    ROOT = auto()
+    CONTAINER = auto()
+    TEXT = auto()
+    IMAGE = auto()
+    STRUCTURE = auto()
+
+
 class WorkingDoc:
     class ORM:
         KeyVal = KeyValORM
@@ -133,6 +144,8 @@ class WorkingDoc:
 
     class ConfigKeys(Enum):
         DocTitle = "DocTitle"
+        CaptureRootUUID = "CaptureRootUUID"
+        FocusUUID = "FocusUUID"
 
     def default_doc():
         return WorkingDoc(db_path=f"./tmp/{uuid.uuid1().__str__()}.db")
@@ -154,6 +167,17 @@ class WorkingDoc:
 
         ORMBase.metadata.create_all(self.db_engine)
         self.session = self.gen_session()
+
+        root_node_orm = self.get_capture_node()
+        root_node_orm.node_type = CapNodeType.ROOT
+        self.commit_orm(root_node_orm)
+        self.merge_kv(
+            self.ConfigKeys.CaptureRootUUID.value, raw_val=root_node_orm._uuid
+        )
+        self.merge_kv(self.ConfigKeys.FocusUUID.value, raw_val=root_node_orm._uuid)
+
+    def get_cap_root_uuid(self):
+        return uuid.UUID(self.merge_kv(self.ConfigKeys.CaptureRootUUID.value).raw_val)
 
     def gen_session(self):
         return self.sessionmaker()
@@ -180,13 +204,13 @@ class WorkingDoc:
             print(e)
             return False
 
-    def get_orm_session(self, orm_cls: Type[T]):
+    def get_orm_query(self, orm_cls: Type[T]):
         try:
             return self.session.query(orm_cls)
         except Exception:
             return None
 
-    def sync_kv(self, key, str_val: str = None, raw_val: bytes = None):
+    def merge_kv(self, key, str_val: str = None, raw_val: bytes = None):
         read_flag = str_val == None and raw_val == None
         kv_ins = self.ORM.KeyVal.get_valid_ins(self.session, key, strict=read_flag)
         if not read_flag:
@@ -196,7 +220,7 @@ class WorkingDoc:
             self.session.commit()
         return kv_ins
 
-    def sync_memo(
+    def merge_memo(
         self,
         memo_identifier: str,
         memo_key: str,
@@ -215,8 +239,24 @@ class WorkingDoc:
             self.session.commit()
         return orm_ins
 
+    def get_capture_node(self, _uuid: uuid.UUID = None, read_mode=False):
+        _uuid = _uuid if _uuid != None else uuid.uuid1()
+        orm_ins = self.ORM.Capture.get_valid_ins(self.session, _uuid, read_mode)
+        return orm_ins
+
+    def get_visual_info(self, capture_uuid: uuid.UUID, read_mode=False):
+        orm_ins = self.ORM.Visual.get_valid_ins(self.session, capture_uuid, read_mode)
+        return orm_ins
+
+    def commit_orm(self, *orm_ins: DeclarativeMeta):
+        for ins in orm_ins:
+            if not isinstance(orm_ins, ORMBase):
+                continue
+            self.session.merge(ins)
+        self.session.commit()
+
     def sync_doc_title(self, set_new_title: str = None) -> str:
-        title_kv = self.sync_kv(self.ConfigKeys.DocTitle.value, str_val=set_new_title)
+        title_kv = self.merge_kv(self.ConfigKeys.DocTitle.value, str_val=set_new_title)
         return None if title_kv == None else title_kv.str_val
 
     def delete_me(self):
@@ -226,3 +266,22 @@ class WorkingDoc:
             os.remove(self.db_path, dir_fd=None)
         except:
             pass
+
+    def walk_cap_tree(
+        self,
+        parent_uuid: uuid.UUID,
+        callback: Callable[[CaptureORM], None],
+        parent_orm: CaptureORM = None,
+    ):
+        parent_orm = (
+            self.get_capture_node(parent_uuid) if parent_orm == None else parent_orm
+        )
+        children = (
+            self.get_orm_query(CaptureORM)
+            .filter_by(parent_uuid=parent_orm._uuid)
+            .order_by(CaptureORM.seq.asc())
+            .all()
+        )
+        for child in children:
+            self.walk_cap_tree(callback=callback, parent_orm=child)
+        callback(parent_orm)

@@ -75,6 +75,24 @@ class PreviewHub(ViewController):
                 page_no=self.working_doc.page_no,
             )
         )
+
+        tmp_capture_orm = self.working_doc.get_capture_node()
+        tmp_capture_orm.parent_uuid = self.working_doc.focus_node.uuid.bytes
+        tmp_capture_orm.node_type = (
+            self.preview_control.selected_nodetype
+            if not second_selection
+            else self.preview_control.selected_nodetype_second
+        ).value
+
+        tmp_visual_orm = self.working_doc.get_visual_info(tmp_capture_orm._uuid)
+        tmp_visual_orm.left = left
+        tmp_visual_orm.top = top
+        tmp_visual_orm.right = right
+        tmp_visual_orm.bottom = bottom
+        tmp_visual_orm.page_no = self.working_doc.page_no
+
+        self.working_doc.commit_orm(tmp_capture_orm, tmp_visual_orm)
+
         self.view_hub.main.listener_hub.post_event(
             PyTransEvent(PyTransEvent.Type.UI_UPDATE)
         )

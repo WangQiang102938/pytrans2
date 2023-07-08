@@ -5,7 +5,6 @@ from PyQt6 import QtGui
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
-from model.capture.capture_node import CaptureNode
 import my_utils
 
 from typing import TYPE_CHECKING
