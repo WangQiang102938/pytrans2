@@ -110,7 +110,7 @@ class IOModule:
         return raw
 
     def sync_binary(self, working_doc: WorkingDoc, binary: bytes = None):
-        return working_doc.merge_memo(
+        return working_doc.get_memo_with_update(
             self.get_title(), IOModule.ConfigKeys.IO_BINARY.value, raw_val=binary
         )
 

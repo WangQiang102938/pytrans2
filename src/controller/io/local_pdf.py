@@ -86,10 +86,14 @@ class LocalPDFModule(IOModule):
             rendered_pages = renderer.render(tmp_doc, binary_data, False)
 
             self.io_hub.set_valid_iomodule(tmp_doc, self)
-            self.sync_binary(tmp_doc,binary_data)
-            tmp_doc.merge_memo(self.get_title(), ConfigKeys.PATH.value, str_val=path)
+            self.sync_binary(tmp_doc, binary_data)
+            tmp_doc.get_memo_with_update(
+                self.get_title(), ConfigKeys.PATH.value, str_val=path
+            )
 
-            tmp_doc.sync_doc_title(set_new_title=f"{my_utils.split_filename(path)}")
+            tmp_doc.get_doctitle_with_update(
+                set_new_title=f"{my_utils.split_filename(path)}"
+            )
             tmp_doc.reload(rendered_pages)
             self.io_hub.add_doc(tmp_doc)
             return True
@@ -102,7 +106,9 @@ class LocalPDFModule(IOModule):
         return self.widget
 
     def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
-        orm_ins = working_doc.merge_memo(self.get_title(), ConfigKeys.PATH.value)
+        orm_ins = working_doc.get_memo_with_update(
+            self.get_title(), ConfigKeys.PATH.value
+        )
         path: str = "Unknown.Local" if orm_ins else orm_ins.str_val
         if not isinstance(path, str):
             return super().get_doc_title()

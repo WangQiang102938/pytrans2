@@ -1,4 +1,5 @@
 from typing import Callable
+from uuid import UUID
 from listener.listener_hub import Listener, ListenerHub, PyTransEvent
 from model.capture.capture_node import CapNodeType, CaptureNode
 from model.doc import WorkingDoc

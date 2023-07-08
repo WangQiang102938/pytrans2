@@ -238,7 +238,7 @@ class HtmlGenV1(PipelineNode):
             return
         try:
             # title = working_doc.io_memo.io_module.get_doc_title(working_doc)
-            title = working_doc.sync_doc_title()
+            title = working_doc.get_doctitle_with_update()
         except Exception as e:
             pdf_path = None
             title = "UNKNOWN title"

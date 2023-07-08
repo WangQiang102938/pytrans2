@@ -51,12 +51,12 @@ class CaptureORM(ORMBase):
     )
 
     @classmethod
-    def get_valid_ins(cls, session: Session, uuid: uuid.UUID, strict=True):
-        ins = session.query(cls).filter_by(_uuid=uuid.bytes).first()
+    def get_valid_ins(cls, session: Session, _uuid: bytes, strict=True):
+        ins = session.query(cls).filter_by(_uuid=_uuid).first()
         if ins == None:
             if strict:
                 return None
-            ins = cls(_uuid=uuid.bytes)
+            ins = cls(_uuid=_uuid)
             session.merge(ins)
         return ins
 
@@ -74,12 +74,12 @@ class VisualORM(ORMBase):
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
     @classmethod
-    def get_valid_ins(cls, session: Session, uuid: uuid.UUID, strict=True):
-        ins = session.query(cls).filter_by(_uuid=uuid.bytes).first()
+    def get_valid_ins(cls, session: Session, _uuid: bytes, strict=True):
+        ins = session.query(cls).filter_by(capture_uuid=_uuid).first()
         if ins == None:
             if strict:
                 return None
-            ins = cls(_uuid=uuid.bytes)
+            ins = cls(capture_uuid=_uuid)
             session.merge(ins)
         return ins
 
@@ -102,7 +102,7 @@ class MemoORM(ORMBase):
         session: Session,
         memo_identifier: str,
         memo_key: str,
-        cap_uuid: uuid.UUID = None,
+        cap_uuid: bytes = None,
         strict=True,
     ):
         ins = (
@@ -110,7 +110,7 @@ class MemoORM(ORMBase):
             .filter_by(
                 memo_identifier=memo_identifier,
                 memo_key=memo_key,
-                capture_uuid=(cap_uuid.bytes if cap_uuid != None else None),
+                capture_uuid=cap_uuid,
             )
             .first()
         )
@@ -118,9 +118,10 @@ class MemoORM(ORMBase):
             if strict:
                 return None
             ins = cls(
+                _uuid=uuid.uuid1().bytes,
                 memo_identifier=memo_identifier,
                 memo_key=memo_key,
-                capture_uuid=(cap_uuid.bytes if cap_uuid != None else None),
+                capture_uuid=cap_uuid,
             )
             session.merge(ins)
         return ins
@@ -169,15 +170,19 @@ class WorkingDoc:
         self.session = self.gen_session()
 
         root_node_orm = self.get_capture_node()
-        root_node_orm.node_type = CapNodeType.ROOT
+        root_node_orm.node_type = CapNodeType.ROOT.name
         self.commit_orm(root_node_orm)
-        self.merge_kv(
+        self.get_kv_with_update(
             self.ConfigKeys.CaptureRootUUID.value, raw_val=root_node_orm._uuid
         )
-        self.merge_kv(self.ConfigKeys.FocusUUID.value, raw_val=root_node_orm._uuid)
+        self.get_kv_with_update(
+            self.ConfigKeys.FocusUUID.value, raw_val=root_node_orm._uuid
+        )
 
     def get_cap_root_uuid(self):
-        return uuid.UUID(self.merge_kv(self.ConfigKeys.CaptureRootUUID.value).raw_val)
+        return uuid.UUID(
+            self.get_kv_with_update(self.ConfigKeys.CaptureRootUUID.value).raw_val
+        )
 
     def gen_session(self):
         return self.sessionmaker()
@@ -210,7 +215,7 @@ class WorkingDoc:
         except Exception:
             return None
 
-    def merge_kv(self, key, str_val: str = None, raw_val: bytes = None):
+    def get_kv_with_update(self, key, str_val: str = None, raw_val: bytes = None):
         read_flag = str_val == None and raw_val == None
         kv_ins = self.ORM.KeyVal.get_valid_ins(self.session, key, strict=read_flag)
         if not read_flag:
@@ -220,11 +225,11 @@ class WorkingDoc:
             self.session.commit()
         return kv_ins
 
-    def merge_memo(
+    def get_memo_with_update(
         self,
         memo_identifier: str,
         memo_key: str,
-        cap_uuid: uuid.UUID = None,
+        cap_uuid: bytes = None,
         str_val: str = None,
         raw_val: bytes = None,
     ):
@@ -235,28 +240,30 @@ class WorkingDoc:
         if not read_flag:
             orm_ins.str_val = str_val if str_val != None else orm_ins.str_val
             orm_ins.raw_val = raw_val if raw_val != None else orm_ins.raw_val
-            self.session.merge(orm_ins)
-            self.session.commit()
+            self.commit_orm(orm_ins)
         return orm_ins
 
-    def get_capture_node(self, _uuid: uuid.UUID = None, read_mode=False):
-        _uuid = _uuid if _uuid != None else uuid.uuid1()
+    def get_capture_node(self, _uuid: bytes = None, read_mode=False):
+        _uuid = _uuid if _uuid != None else uuid.uuid1().bytes
         orm_ins = self.ORM.Capture.get_valid_ins(self.session, _uuid, read_mode)
         return orm_ins
 
-    def get_visual_info(self, capture_uuid: uuid.UUID, read_mode=False):
+    def get_visual_info(self, capture_uuid: bytes, read_mode=False):
         orm_ins = self.ORM.Visual.get_valid_ins(self.session, capture_uuid, read_mode)
         return orm_ins
 
     def commit_orm(self, *orm_ins: DeclarativeMeta):
         for ins in orm_ins:
-            if not isinstance(orm_ins, ORMBase):
-                continue
-            self.session.merge(ins)
+            try:
+                self.session.merge(ins)
+            except Exception as e:
+                print(e)
         self.session.commit()
 
-    def sync_doc_title(self, set_new_title: str = None) -> str:
-        title_kv = self.merge_kv(self.ConfigKeys.DocTitle.value, str_val=set_new_title)
+    def get_doctitle_with_update(self, set_new_title: str = None) -> str:
+        title_kv = self.get_kv_with_update(
+            self.ConfigKeys.DocTitle.value, str_val=set_new_title
+        )
         return None if title_kv == None else title_kv.str_val
 
     def delete_me(self):
@@ -269,7 +276,7 @@ class WorkingDoc:
 
     def walk_cap_tree(
         self,
-        parent_uuid: uuid.UUID,
+        parent_uuid: bytes,
         callback: Callable[[CaptureORM], None],
         parent_orm: CaptureORM = None,
     ):

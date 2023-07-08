@@ -114,7 +114,7 @@ class PDFDownloader(IOModule):
             self.io_hub.add_doc(tmp_doc)
 
             self.sync_binary(tmp_doc, buffer.getvalue())
-            tmp_doc.merge_memo(
+            tmp_doc.get_memo_with_update(
                 self.get_title(),
                 ConfigKeys.RAW_DATA.value,
                 str_val=self.widget.url_edit.text(),
