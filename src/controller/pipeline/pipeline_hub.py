@@ -1,31 +1,31 @@
-from sqlalchemy import Column, Integer, String, create_engine
-import sqlalchemy.orm
-import sqlalchemy
-from sqlalchemy.ext.declarative import declarative_base
-from enum import Enum, auto
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from PyQt6.QtWidgets import *
-import sqlalchemy
-from listener.listener_hub import PyTransEvent
-import my_utils
-import os
-import sys
 import importlib
 import importlib.machinery
 import inspect
+import os
+import sys
+import uuid
+from enum import Enum, auto
+from typing import *
+
+import sqlalchemy
+import sqlalchemy.orm
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+
+import my_utils
+from listener.listener_hub import PyTransEvent
 from model.capture.capture_node import CaptureNode
 from model.doc import WorkingDoc
-from typing import *
-import uuid
-
 from view.view_hub import ViewController
 
 if TYPE_CHECKING:
     from controller.controller_hub import ControllerHub
 
-from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
-from sqlalchemy import Column, Integer, LargeBinary, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, String
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 
 Base: DeclarativeMeta = declarative_base()
 T = TypeVar("T")
@@ -33,7 +33,7 @@ ModelBase = declarative_base()
 
 
 class PipelineListRecord(ModelBase):
-    __tablename__ = 'PipelineList'
+    __tablename__ = "PipelineList"
 
     id = Column(Integer, primary_key=True)
     index = Column(Integer)
@@ -42,7 +42,7 @@ class PipelineListRecord(ModelBase):
 
 
 class LinkRecord(ModelBase):
-    __tablename__ = 'PipeLinkList'
+    __tablename__ = "PipeLinkList"
 
     id = Column(Integer, primary_key=True)
     out_uuid = Column(String(length=256))
@@ -106,17 +106,19 @@ class PipelineHub:
             if cls == None:
                 continue
             ins = cls(self)
-            ins.uuid = info.uuid
+            ins.uuid = uuid.UUID(info.uuid)
             ins.load_config(info.configs)
             ins_uuid_kw[ins.uuid] = ins
             self.pipeline_node_ins.append(ins)
         # load links
         link_infos = self.appdata_session.query(PipeNodeLinkRecord).all()
         for info in link_infos:
-            if info.in_uuid not in ins_uuid_kw or info.out_uuid not in ins_uuid_kw:
+            in_uuid = uuid.UUID(info.in_uuid)
+            out_uuid = uuid.UUID(info.out_uuid)
+            if in_uuid not in ins_uuid_kw or out_uuid not in ins_uuid_kw:
                 continue
-            in_ins = ins_uuid_kw[info.in_uuid]
-            out_ins = ins_uuid_kw[info.out_uuid]
+            in_ins = ins_uuid_kw[in_uuid]
+            out_ins = ins_uuid_kw[out_uuid]
             in_ins.set_link(out_ins, info.out_key, info.in_key)
         self.ctrl_hub.main.listener_hub.post_event(
             PyTransEvent(

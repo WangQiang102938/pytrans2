@@ -113,30 +113,16 @@ class PDFDownloader(IOModule):
             tmp_memo.buffer = buffer
             self.io_hub.add_doc(tmp_doc)
 
-            tmp_doc.set_memo(
-                memo_identifier=self.get_title(),
-                memo_key=ConfigKeys.RAW_DATA,
+            self.sync_binary(tmp_doc, buffer.getvalue())
+            tmp_doc.sync_memo(
+                self.get_title(),
+                ConfigKeys.RAW_DATA.value,
                 str_val=self.widget.url_edit.text(),
-                raw_val=buffer.getvalue(),
             )
         except Exception as e:
             pass
         finally:
             self.io_hub.ui_lock_update(True)
-
-    def export_binary(self, path: str, working_doc: WorkingDoc):
-        try:
-            memo: ModuleMemo = working_doc.io_memo
-            filepath = f"{path}/{self.get_doc_title(working_doc)}.pdf"
-            with open(filepath, "wb") as f:
-                f.write(memo.buffer.getvalue())
-            return True
-        except Exception as e:
-            return False
-
-    def get_binary(self, working_doc: WorkingDoc):
-        res: bytes = working_doc.get_memo(self.get_title(), ConfigKeys.RAW_DATA)
-        return None if res == None else res
 
     def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
         try:

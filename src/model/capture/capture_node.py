@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 
 from typing import TYPE_CHECKING
+import uuid
 
 if TYPE_CHECKING:
     from model.doc import WorkingDoc
@@ -22,6 +23,7 @@ class CaptureNode:
     def __init__(
         self, working_doc: "WorkingDoc", node_type: CapNodeType = CapNodeType.RAW
     ) -> None:
+        self.uuid=uuid.uuid1()
         self.parent: CaptureNode = None
         self.children = list[CaptureNode]()
         self.kwargs = dict()

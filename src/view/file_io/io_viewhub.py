@@ -34,7 +34,7 @@ class IOViewhub(ViewController):
         opened_doc_list.clear()
         for doc in self.model.opened_docs:
             listitem = QListWidgetItem()
-            listitem.setText(doc.doc_title())
+            listitem.setText(doc.sync_doc_title())
             listitem.setData(Qt.ItemDataRole.UserRole, doc)
             opened_doc_list.addItem(listitem)
             if doc == self.model.working_doc:

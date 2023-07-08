@@ -78,6 +78,9 @@ class IOHub:
 
 
 class IOModule:
+    class ConfigKeys(Enum):
+        IO_BINARY = "IO_BINARY"
+
     def __init__(self, io_hub: IOHub) -> None:
         self.io_hub = io_hub
         self.uuid = uuid.uuid1()
@@ -92,10 +95,24 @@ class IOModule:
         return "NO TITLE"
 
     def export_binary(self, path: str, working_doc: WorkingDoc):
-        pass
+        try:
+            f = open(path, "wb")
+            f.write(self.get_binary(working_doc))
+            return True
+        except Exception as e:
+            return False
 
     def get_binary(self, working_doc: WorkingDoc):
-        pass
+        memo_ins = self.sync_binary(working_doc)
+        if memo_ins == None:
+            return None
+        raw: bytes = memo_ins.raw_val
+        return raw
+
+    def sync_binary(self, working_doc: WorkingDoc, binary: bytes = None):
+        return working_doc.sync_memo(
+            self.get_title(), IOModule.ConfigKeys.IO_BINARY.value, raw_val=binary
+        )
 
 
 class Renderer:

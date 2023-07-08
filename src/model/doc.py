@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, BINARY, Double, DateTime
+from sqlalchemy import Column, Integer, String, BINARY, Double, DateTime, text
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from enum import Enum, auto
 from typing import Type, Union
@@ -21,28 +21,47 @@ T = TypeVar("T", bound=DeclarativeMeta)
 class KeyValORM(ORMBase):
     __tablename__ = "PyTransDoc"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    key = Column(String)
+    key = Column(String, unique=True, primary_key=True)
     str_val = Column(String, nullable=True)
     raw_val = Column(BINARY, nullable=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
+    @classmethod
+    def get_valid_ins(cls, session: Session, key: str, strict=True):
+        ins = session.query(cls).filter_by(key=key).first()
+        if ins == None:
+            if strict:
+                return None
+            ins = cls(key=key)
+            session.merge(ins)
+        return ins
+
 
 class CaptureORM(ORMBase):
     __tablename__ = "PyTransCapture"
 
-    uuid = Column(BINARY, primary_key=True)
+    _uuid = Column(BINARY, primary_key=True)
     parent_uuid = Column(BINARY)
     node_type = Column(String)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
+    @classmethod
+    def get_valid_ins(cls, session: Session, uuid: uuid.UUID, strict=True):
+        ins = session.query(cls).filter_by(_uuid=uuid.bytes).first()
+        if ins == None:
+            if strict:
+                return None
+            ins = cls(_uuid=uuid.bytes)
+            session.merge(ins)
+        return ins
+
 
 class VisualORM(ORMBase):
     __tablename__ = "PyTransVisual"
 
-    uuid = Column(BINARY, primary_key=True)
+    _uuid = Column(BINARY, primary_key=True)
     capture_uuid = Column(BINARY)
     page_no = Column(Integer)
     top = Column(Double)
@@ -52,11 +71,21 @@ class VisualORM(ORMBase):
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
+    @classmethod
+    def get_valid_ins(cls, session: Session, uuid: uuid.UUID, strict=True):
+        ins = session.query(cls).filter_by(_uuid=uuid.bytes).first()
+        if ins == None:
+            if strict:
+                return None
+            ins = cls(_uuid=uuid.bytes)
+            session.merge(ins)
+        return ins
+
 
 class MemoORM(ORMBase):
     __tablename__ = "PyTransMemo"
 
-    uuid = Column(BINARY, primary_key=True, default=lambda: uuid.uuid1().bytes)
+    _uuid = Column(BINARY, primary_key=True, default=lambda: uuid.uuid1().bytes)
     capture_uuid = Column(BINARY, nullable=True)
     memo_identifier = Column(String)
     memo_key = Column(String)
@@ -64,6 +93,35 @@ class MemoORM(ORMBase):
     raw_val = Column(BINARY, nullable=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
+
+    @classmethod
+    def get_valid_ins(
+        cls,
+        session: Session,
+        memo_identifier: str,
+        memo_key: str,
+        cap_uuid: uuid.UUID = None,
+        strict=True,
+    ):
+        ins = (
+            session.query(cls)
+            .filter_by(
+                memo_identifier=memo_identifier,
+                memo_key=memo_key,
+                capture_uuid=(cap_uuid.bytes if cap_uuid != None else None),
+            )
+            .first()
+        )
+        if ins == None:
+            if strict:
+                return None
+            ins = cls(
+                memo_identifier=memo_identifier,
+                memo_key=memo_key,
+                capture_uuid=(cap_uuid.bytes if cap_uuid != None else None),
+            )
+            session.merge(ins)
+        return ins
 
 
 class WorkingDoc:
@@ -128,63 +186,38 @@ class WorkingDoc:
         except Exception:
             return None
 
-    def set_kv(self, key: str, val: Union[str, bytes]):
-        is_str = isinstance(val, str)
-        is_bin = isinstance(val, bytes)
-        return self.set_orm(
-            KeyValORM(
-                key=key,
-                str_val=val if is_str else None,
-                raw_val=val if is_bin else None,
-            )
-        )
+    def sync_kv(self, key, str_val: str = None, raw_val: bytes = None):
+        read_flag = str_val == None and raw_val == None
+        kv_ins = self.ORM.KeyVal.get_valid_ins(self.session, key, strict=read_flag)
+        if not read_flag:
+            kv_ins.str_val = str_val if str_val != None else kv_ins.str_val
+            kv_ins.raw_val = raw_val if raw_val != None else kv_ins.raw_val
+            self.session.merge(kv_ins)
+            self.session.commit()
+        return kv_ins
 
-    def get_kv_orm(self, key, all=False):
-        query = self.get_orm_session(KeyValORM).filter_by(key=key)
-        return query.all() if all else query.first()
-
-    def set_memo(
+    def sync_memo(
         self,
         memo_identifier: str,
         memo_key: str,
         cap_uuid: uuid.UUID = None,
-        str_val="",
+        str_val: str = None,
         raw_val: bytes = None,
     ):
-        return self.set_orm(
-            self.ORM.Memo(
-                memo_identifier=memo_identifier,
-                memo_key=memo_key,
-                str_val=str_val,
-                raw_val=raw_val,
-            )
+        read_flag = str_val == None and raw_val == None
+        orm_ins = self.ORM.Memo.get_valid_ins(
+            self.session, memo_identifier, memo_key, cap_uuid, read_flag
         )
+        if not read_flag:
+            orm_ins.str_val = str_val if str_val != None else orm_ins.str_val
+            orm_ins.raw_val = raw_val if raw_val != None else orm_ins.raw_val
+            self.session.merge(orm_ins)
+            self.session.commit()
+        return orm_ins
 
-    def get_memo(
-        self,
-        memo_identifier: str,
-        memo_key: str,
-        cap_uuid: uuid.UUID = None,
-        str_mode=False,
-        both_mode=False,
-    ):
-        result = (
-            self.get_orm_session(self.ORM.Memo)
-            .filter_by(
-                memo_identifier=memo_identifier, memo_key=memo_key, cap_uuid=cap_uuid
-            )
-            .first()
-        )
-        if result == None or (str_mode == False and both_mode == False):
-            return None
-        if both_mode:
-            return result.str_val, result.raw_val
-        return result.str_val if str_mode else result.raw_val
-
-    def doc_title(self, set_new_title: str = None) -> str:
-        if isinstance(set_new_title, str):
-            self.set_kv(self.ConfigKeys.DocTitle.value, set_new_title)
-        return self.get_kv_orm(self.ConfigKeys.DocTitle.value).str_val
+    def sync_doc_title(self, set_new_title: str = None) -> str:
+        title_kv = self.sync_kv(self.ConfigKeys.DocTitle.value, str_val=set_new_title)
+        return None if title_kv == None else title_kv.str_val
 
     def delete_me(self):
         try:

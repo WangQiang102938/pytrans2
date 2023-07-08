@@ -28,8 +28,7 @@ class ModuleMemo(IOMemo):
 
 
 class ConfigKeys(Enum):
-    RAW_DATA = "RAW_DATA"
-    MEMO_BODY = "MEMO_BODY"
+    PATH = "PATH"
 
 
 class LocalPDFModule(IOModule):
@@ -85,14 +84,12 @@ class LocalPDFModule(IOModule):
             )
             tmp_doc = WorkingDoc.default_doc()
             rendered_pages = renderer.render(tmp_doc, binary_data, False)
-            tmp_doc.set_memo(
-                self.get_title(),
-                ConfigKeys.RAW_DATA.value,
-                str_val=path,
-                raw_val=binary_data,
-            )
-            tmp_doc.doc_title(set_new_title=f"{my_utils.split_filename(path)}")
+
             self.io_hub.set_valid_iomodule(tmp_doc, self)
+            self.sync_binary(tmp_doc,binary_data)
+            tmp_doc.sync_memo(self.get_title(), ConfigKeys.PATH.value, str_val=path)
+
+            tmp_doc.sync_doc_title(set_new_title=f"{my_utils.split_filename(path)}")
             tmp_doc.reload(rendered_pages)
             self.io_hub.add_doc(tmp_doc)
             return True
@@ -105,24 +102,11 @@ class LocalPDFModule(IOModule):
         return self.widget
 
     def get_doc_title(self, working_doc: WorkingDoc, with_id=False):
-        path: str = working_doc.get_memo(
-            self.get_title(), ConfigKeys.RAW_DATA.value, str_mode=True
-        )
+        orm_ins = working_doc.sync_memo(self.get_title(), ConfigKeys.PATH.value)
+        path: str = "Unknown.Local" if orm_ins else orm_ins.str_val
         if not isinstance(path, str):
             return super().get_doc_title()
         return f"{my_utils.split_filename(path)}{'' if not with_id else f' @ {id(working_doc)}'}"
-
-    def export_binary(self, path: str, working_doc: WorkingDoc):
-        try:
-            f = open(path, "wb")
-            f.write(self.get_binary())
-            return True
-        except Exception as e:
-            return False
-
-    def get_binary(self, working_doc: WorkingDoc):
-        raw = working_doc.get_memo(self.get_title(), ConfigKeys.RAW_DATA)
-        return raw
 
 
 class ModuleWidget(QFrame):
