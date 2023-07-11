@@ -65,6 +65,7 @@ class PipelineHub:
 
         self.ctrl_hub.sync_appdata_table(Base)
         self.appdata_session = self.ctrl_hub.main.model_hub.gen_appdata_session()
+        self.ctrl_hub.main.post_init_calls.append(self.load_pipe_config)
 
     def save_pipe_config(self):
         self.appdata_session.query(PipelineNodeRecord).delete()
@@ -107,7 +108,7 @@ class PipelineHub:
                 continue
             ins = cls(self)
             ins.uuid = uuid.UUID(info.uuid)
-            ins.load_config(info.configs)
+            ins.load_config()
             ins_uuid_kw[ins.uuid] = ins
             self.pipeline_node_ins.append(ins)
         # load links
@@ -202,7 +203,7 @@ class PipelineNode:
         self.link_info[in_key] = (out_ins, out_key)
         return True
 
-    def load_config(self, config: bytes):
+    def load_config(self):
         pass
 
 
