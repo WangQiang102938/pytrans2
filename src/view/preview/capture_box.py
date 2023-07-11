@@ -28,7 +28,10 @@ cap_type_color_map = {CapNodeType.IMAGE: (0, 128, 0, 128)}
 
 
 class CaptureBoxItem(QGraphicsRectItem):
-    def bind(self, preview_hub: "PreviewHub", node: CaptureNode):
+    def bind(
+        self, preview_hub: "PreviewHub", node: CaptureNode, uuid_raw: bytes = None
+    ):
+        self.uuid_raw = uuid_raw
         self.preview_hub = preview_hub
         self.capture_node = node
 
@@ -186,6 +189,9 @@ class CaptureBoxItem(QGraphicsRectItem):
         self.preview_hub.view_hub.main.listener_hub.post_event(
             PyTransEvent(PyTransEvent.Type.UI_UPDATE)
         )
+
+    def self_update(self):
+        pass
 
 
 class ResizeIconItem(QGraphicsEllipseItem):

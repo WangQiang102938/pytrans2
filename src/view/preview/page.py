@@ -5,23 +5,58 @@ from PIL.ImageQt import ImageQt
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from model.doc import WorkingDoc
 
 import my_utils.preview_utils as preview_utils
 
 from typing import TYPE_CHECKING
+
+from view.preview.capture_box import CaptureBoxItem
 
 if TYPE_CHECKING:
     from view.preview.preview_hub import PreviewHub
 
 
 class PageItem(QGraphicsPixmapItem):
-    def bind(self, preview_hub: "PreviewHub"):
+    def bind(self, preview_hub: "PreviewHub", working_doc: WorkingDoc):
+        self.working_doc = working_doc
         self.preview_hub = preview_hub
         self.creating_box: QGraphicsRectItem = None
         self.start_pos: QPointF = None
         self.end_pos: QPointF = None
+        self.rawuuid2capture = dict[bytes, CaptureBoxItem]()
+
         self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
         return self
+
+    def load_page_captures(self, page_index: int):
+        visual_orms = (
+            self.working_doc.get_orm_query(self.working_doc.ORM.Visual)
+            .filter_by(page_no=page_index)
+            .all()
+        )
+        for orm in visual_orms:
+            self.rawuuid2capture[orm.capture_uuid] = CaptureBoxItem().bind(
+                self.preview_hub, None, orm.capture_uuid
+            )
+
+    def update_captures(self, *raw_uuids):
+        for raw_uuid in raw_uuids:
+            orm = self.working_doc.get_visual_info(raw_uuid, True)
+            if orm == None:
+                if raw_uuid not in self.rawuuid2capture:  # no orm, no item -> pass
+                    continue
+                item = self.rawuuid2capture[raw_uuid]  # no orm, have item -> remove
+                if isinstance(item, QGraphicsItem):
+                    item.setParentItem(None)
+                del self.rawuuid2capture[raw_uuid]  # remove record
+            else:
+                if raw_uuid not in self.rawuuid2capture:  # have orm, no item-> create
+                    self.rawuuid2capture[raw_uuid] = CaptureBoxItem().bind(
+                        self.preview_hub, None, raw_uuid
+                    )
+                else:  # have orm, have item -> self update
+                    self.rawuuid2capture[raw_uuid].self_update()
 
     def mousePressEvent(self, event: "QGraphicsSceneMouseEvent") -> None:
         self.setSelected(True)
@@ -35,7 +70,7 @@ class PageItem(QGraphicsPixmapItem):
                     preview_utils.rect_from_2point(self.start_pos, self.end_pos),
                     self.preview_hub.page_item.boundingRect(),
                 ),
-                self
+                self,
             )
             preview_utils.update_box_preview(
                 self.preview_hub, self.creating_box.rect(), True

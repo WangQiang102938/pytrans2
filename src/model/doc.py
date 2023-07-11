@@ -1,9 +1,10 @@
+import pickle
 from sqlalchemy import Column, Integer, String, BINARY, Double, DateTime, text
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from enum import Enum, auto
-from typing import Callable, Type, Union
+from typing import Any, Callable, Type, Union
 from PIL.Image import Image
 import uuid
 from model.capture.capture_node import CaptureNode
@@ -147,6 +148,7 @@ class WorkingDoc:
         DocTitle = "DocTitle"
         CaptureRootUUID = "CaptureRootUUID"
         FocusUUID = "FocusUUID"
+        PageCache = "PageCache"
 
     def default_doc():
         return WorkingDoc(db_path=f"./tmp/{uuid.uuid1().__str__()}.db")
@@ -161,6 +163,8 @@ class WorkingDoc:
         self.focus_node = self.root_node
         self.status = self.STATUS.NOT_AVALIABLE
         self.page_no = 0
+
+        self.doc_cache = dict[str, Any]()
 
         self.db_path = db_path
         self.db_engine = sqlalchemy.create_engine(f"sqlite:///{self.db_path}")
@@ -215,7 +219,7 @@ class WorkingDoc:
         except Exception:
             return None
 
-    def get_kv_with_update(self, key, str_val: str = None, raw_val: bytes = None):
+    def get_kv_with_update(self, key: str, str_val: str = None, raw_val: bytes = None):
         read_flag = str_val == None and raw_val == None
         kv_ins = self.ORM.KeyVal.get_valid_ins(self.session, key, strict=read_flag)
         if not read_flag:
@@ -292,3 +296,13 @@ class WorkingDoc:
         for child in children:
             self.walk_cap_tree(callback=callback, parent_orm=child)
         callback(parent_orm)
+
+    def save_doc(self):
+        self.get_kv_with_update(
+            self.ConfigKeys.PageCache.value, raw_val=pickle.dumps(self.page_cache)
+        )
+
+    def load_doc(self):
+        self.page_cache = pickle.loads(
+            self.get_kv_with_update(self.ConfigKeys.PageCache.value).raw_val
+        )

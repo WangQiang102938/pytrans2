@@ -4,10 +4,11 @@ import sys
 import inspect
 import importlib
 import importlib.machinery
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Callable
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from listener.listener_hub import PyTransEvent
 
 import my_utils
 
@@ -59,6 +60,9 @@ class ListenerHub:
         self.active_flag = False
         self.callback_set_flag = False
 
+    def post_callback(self, callback: Callable[[]]):
+        self.post_event(PyTransEvent(PyTransEvent.Type.CALLBACK, callback))
+
 
 class Listener:
     def __init__(self, l_hub: ListenerHub) -> None:
@@ -83,3 +87,15 @@ class PyTransEvent:
         UI_UPDATE = auto()
         NODE_UPDATE = auto()
         PIPELINE_RUN = auto()
+        CALLBACK = auto()
+
+
+class CallbackListener(Listener):
+    def listened_event(self, event: PyTransEvent) -> bool:
+        return event.type == PyTransEvent.Type.CALLBACK
+
+    def event_handler(self, event: PyTransEvent):
+        try:
+            event.args[0]()
+        except Exception as e:
+            print(e.with_traceback())
