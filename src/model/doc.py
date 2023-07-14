@@ -95,7 +95,7 @@ class VisualORM(ORMBase):
 class MemoORM(ORMBase):
     __tablename__ = "PyTransMemo"
 
-    _uuid = Column(BINARY, primary_key=True, default=lambda: uuid.uuid1().bytes)
+    raw_uuid = Column(BINARY, primary_key=True, default=lambda: uuid.uuid1().bytes)
     capture_uuid = Column(BINARY, nullable=True)
     memo_identifier = Column(String)
     memo_key = Column(String)
@@ -150,7 +150,7 @@ class WorkingDoc:
         MemoORM = MemoORM
         VisualORM = VisualORM
         CaptureORM = CaptureORM
-        RawDataORM=RawDataORM
+        RawDataORM = RawDataORM
 
     class ConfigKeys(Enum):
         DocTitle = "DocTitle"
@@ -261,7 +261,9 @@ class WorkingDoc:
         return orm_ins
 
     def get_visual_info(self, capture_uuid: bytes, read_mode=False):
-        orm_ins = self.ORM.VisualORM.get_valid_ins(self.session, capture_uuid, read_mode)
+        orm_ins = self.ORM.VisualORM.get_valid_ins(
+            self.session, capture_uuid, read_mode
+        )
         return orm_ins
 
     def commit_orm(self, *orm_ins: DeclarativeMeta):
@@ -315,5 +317,44 @@ class WorkingDoc:
             self.get_kv_with_update(self.ConfigKeys.PageCache.value).data_rawuuid
         )
 
-    def put_raw_data(self,data:bytes):
-        tmp_data_orm=
+    def put_raw_data(self, data: bytes):
+        tmp_data_orm = RawDataORM()
+        tmp_data_orm.raw_uuid = uuid.uuid1().bytes
+        tmp_data_orm.raw_data = data
+        self.commit_orm(tmp_data_orm)
+        return tmp_data_orm.raw_uuid
+
+    def get_raw_data(self, raw_uuid: bytes):
+        return self.session.query(RawDataORM).filter_by(raw_uuid=raw_uuid).first()
+
+    def raw_data_gc(self):
+        self.session.query(RawDataORM).filter(
+            RawDataORM.raw_uuid.not_in(self.get_orm_query(KeyValORM.data_rawuuid)),
+            RawDataORM.raw_uuid.not_in(self.get_orm_query(MemoORM.data_rawuuid)),
+        ).delete()
+        self.session.commit()
+
+    def get_memo_orm(
+        self, memo_id: str, memo_key: str, cap_rawuuid: bytes = None, auto_create=True
+    ):
+        orm_ins = (
+            self.session.query(MemoORM)
+            .filter_by(
+                memo_identifier=memo_id, memo_key=memo_key, capture_uuid=cap_rawuuid
+            )
+            .first()
+        )
+        return (
+            orm_ins
+            if (not auto_create or orm_ins != None)
+            else MemoORM(
+                raw_uuid=uuid.uuid1().bytes,
+                memo_identifier=memo_id,
+                memo_key=memo_key,
+                capture_uuid=cap_rawuuid,
+            )
+        )
+
+    def get_kv_orm(self, key: str, auto_create=True):
+        orm_ins = self.session.query(KeyValORM).filter_by(key=key)
+        return orm_ins if (not auto_create or orm_ins != None) else KeyValORM(key=key)

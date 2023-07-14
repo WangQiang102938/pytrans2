@@ -27,12 +27,7 @@ class PDFRenderer(Renderer):
         self.widget = SettingWidget().bind(self)
         self.progress_bar = self.io_hub.ctrl_hub.main.ui.rendererProgressbar
 
-    def render(
-        self, working_doc: WorkingDoc, binary: bytes, use_cache=True
-    ) -> list[Image]:
-        if use_cache:
-            return self.sync_cache(working_doc)
-
+    def render(self, working_doc: WorkingDoc, binary: bytes) -> list[Image]:
         ui_lock_status_before = self.io_hub.ctrl_hub.main.mainwindow.isEnabled()
         try:
             self.io_hub.ui_lock_update(False)
@@ -53,8 +48,6 @@ class PDFRenderer(Renderer):
 
                 self.progress_bar.setValue(index + 1)
                 self.io_hub.ui_lock_update()
-            if self.widget.cache_check.isChecked():
-                self.sync_cache(working_doc, rendered_pages)
             return rendered_pages
         except Exception:
             return None
@@ -63,21 +56,6 @@ class PDFRenderer(Renderer):
 
     def popup_setting(self):
         self.widget.show()
-
-    def sync_cache(self, working_doc: WorkingDoc, cache: List[Image] = None):
-        binary = None if cache == None else pickle.dumps(cache)
-        orm_ins = working_doc.get_memo_with_update(
-            self.get_title(), ConfigKeys.RENDER_CACHE.value, raw_val=binary
-        )
-        if cache != None:
-            return cache
-        try:
-            binary = orm_ins.data_rawuuid
-            cache = pickle.loads(binary)
-            return cache if isinstance(cache, list) else None
-        except Exception as e:
-            print(e)
-            return None
 
 
 class SettingWidget(QFrame):
@@ -92,8 +70,4 @@ class SettingWidget(QFrame):
         )
         self.scale_spin.setValue(5)
         self.scale_spin.setRange(1, 9)
-
-        self.cache_check = qt_utils.add_to_layout(
-            self.layout(), QCheckBox("keep rendered cache")
-        )
         return self

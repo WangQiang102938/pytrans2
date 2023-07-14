@@ -103,16 +103,25 @@ class IOModule:
             return False
 
     def get_binary(self, working_doc: WorkingDoc):
-        memo_ins = self.sync_binary(working_doc)
-        if memo_ins == None:
+        try:
+            memo_orm = working_doc.get_memo_orm(
+                self.get_id(), self.ConfigKeys.IO_BINARY.value, auto_create=False
+            )
+            return working_doc.get_raw_data(memo_orm.data_rawuuid).raw_data
+        except Exception as e:
+            print(e)
             return None
-        raw: bytes = memo_ins.data_rawuuid
-        return raw
 
     def sync_binary(self, working_doc: WorkingDoc, binary: bytes = None):
-        return working_doc.get_memo_with_update(
-            self.get_title(), IOModule.ConfigKeys.IO_BINARY.value, raw_val=binary
+        memo_orm = working_doc.get_memo_orm(
+            self.get_id(),
+            self.ConfigKeys.IO_BINARY.value,
         )
+        memo_orm.data_rawuuid = working_doc.put_raw_data(binary)
+        working_doc.commit_orm(memo_orm)
+
+    def get_id(self):
+        return self.__class__.__name__
 
 
 class Renderer:
@@ -123,9 +132,7 @@ class Renderer:
     def get_title(self):
         return self.__class__.__name__
 
-    def render(
-        self, working_doc: WorkingDoc, binary: bytes, use_cache=True
-    ) -> list[Image]:
+    def render(self, working_doc: WorkingDoc, binary: bytes) -> list[Image]:
         pass
 
     def popup_setting(self):
