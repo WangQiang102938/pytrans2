@@ -68,7 +68,7 @@ class StandardCrop(PipelineNode):
             orm_ins = node.working_doc.get_memo_with_update(
                 self.uuid.hex, key, node.uuid.bytes
             )
-            img_bin: bytes = orm_ins.raw_val
+            img_bin: bytes = orm_ins.data_rawuuid
             img: Image = pickle.loads(img_bin)
             return None if not isinstance(img, Image) else img
         except Exception as e:

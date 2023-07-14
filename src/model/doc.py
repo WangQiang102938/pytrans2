@@ -19,12 +19,19 @@ ORMBase: DeclarativeMeta = declarative_base()
 T = TypeVar("T", bound=DeclarativeMeta)
 
 
+class RawDataORM(ORMBase):
+    __tablename__ = "RawData"
+
+    raw_uuid = Column(BINARY, unique=True, primary_key=True)
+    raw_data = Column(BINARY, nullable=True)
+
+
 class KeyValORM(ORMBase):
     __tablename__ = "PyTransDoc"
 
     key = Column(String, unique=True, primary_key=True)
     str_val = Column(String, nullable=True)
-    raw_val = Column(BINARY, nullable=True)
+    data_rawuuid = Column(BINARY, nullable=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
@@ -93,7 +100,7 @@ class MemoORM(ORMBase):
     memo_identifier = Column(String)
     memo_key = Column(String)
     str_val = Column(String, nullable=True)
-    raw_val = Column(BINARY, nullable=True)
+    data_rawuuid = Column(BINARY, nullable=True)
     date_c = Column(DateTime(), default=datetime.datetime.now)
     date_m = Column(DateTime(), onupdate=datetime.datetime.now)
 
@@ -139,10 +146,11 @@ class CapNodeType(Enum):
 
 class WorkingDoc:
     class ORM:
-        KeyVal = KeyValORM
-        Memo = MemoORM
-        Visual = VisualORM
-        Capture = CaptureORM
+        KeyValORM = KeyValORM
+        MemoORM = MemoORM
+        VisualORM = VisualORM
+        CaptureORM = CaptureORM
+        RawDataORM=RawDataORM
 
     class ConfigKeys(Enum):
         DocTitle = "DocTitle"
@@ -185,7 +193,7 @@ class WorkingDoc:
 
     def get_cap_root_uuid(self):
         return uuid.UUID(
-            self.get_kv_with_update(self.ConfigKeys.CaptureRootUUID.value).raw_val
+            self.get_kv_with_update(self.ConfigKeys.CaptureRootUUID.value).data_rawuuid
         )
 
     def gen_session(self):
@@ -221,10 +229,10 @@ class WorkingDoc:
 
     def get_kv_with_update(self, key: str, str_val: str = None, raw_val: bytes = None):
         read_flag = str_val == None and raw_val == None
-        kv_ins = self.ORM.KeyVal.get_valid_ins(self.session, key, strict=read_flag)
+        kv_ins = self.ORM.KeyValORM.get_valid_ins(self.session, key, strict=read_flag)
         if not read_flag:
             kv_ins.str_val = str_val if str_val != None else kv_ins.str_val
-            kv_ins.raw_val = raw_val if raw_val != None else kv_ins.raw_val
+            kv_ins.data_rawuuid = raw_val if raw_val != None else kv_ins.data_rawuuid
             self.session.merge(kv_ins)
             self.session.commit()
         return kv_ins
@@ -238,22 +246,22 @@ class WorkingDoc:
         raw_val: bytes = None,
     ):
         read_flag = str_val == None and raw_val == None
-        orm_ins = self.ORM.Memo.get_valid_ins(
+        orm_ins = self.ORM.MemoORM.get_valid_ins(
             self.session, memo_identifier, memo_key, cap_uuid, read_flag
         )
         if not read_flag:
             orm_ins.str_val = str_val if str_val != None else orm_ins.str_val
-            orm_ins.raw_val = raw_val if raw_val != None else orm_ins.raw_val
+            orm_ins.data_rawuuid = raw_val if raw_val != None else orm_ins.data_rawuuid
             self.commit_orm(orm_ins)
         return orm_ins
 
     def get_capture_node(self, _uuid: bytes = None, read_mode=False):
         _uuid = _uuid if _uuid != None else uuid.uuid1().bytes
-        orm_ins = self.ORM.Capture.get_valid_ins(self.session, _uuid, read_mode)
+        orm_ins = self.ORM.CaptureORM.get_valid_ins(self.session, _uuid, read_mode)
         return orm_ins
 
     def get_visual_info(self, capture_uuid: bytes, read_mode=False):
-        orm_ins = self.ORM.Visual.get_valid_ins(self.session, capture_uuid, read_mode)
+        orm_ins = self.ORM.VisualORM.get_valid_ins(self.session, capture_uuid, read_mode)
         return orm_ins
 
     def commit_orm(self, *orm_ins: DeclarativeMeta):
@@ -304,5 +312,8 @@ class WorkingDoc:
 
     def load_doc(self):
         self.page_cache = pickle.loads(
-            self.get_kv_with_update(self.ConfigKeys.PageCache.value).raw_val
+            self.get_kv_with_update(self.ConfigKeys.PageCache.value).data_rawuuid
         )
+
+    def put_raw_data(self,data:bytes):
+        tmp_data_orm=

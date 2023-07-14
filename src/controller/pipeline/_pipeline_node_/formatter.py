@@ -95,7 +95,7 @@ class StandardFormatter(PipelineNode):
         try:
             binary = node.working_doc.get_memo_with_update(
                 self.uuid.hex, key, node.uuid.bytes
-            ).raw_val
+            ).data_rawuuid
             return pickle.loads(binary)
         except Exception as e:
             print(e)

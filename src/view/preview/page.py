@@ -31,7 +31,7 @@ class PageItem(QGraphicsPixmapItem):
 
     def load_page_captures(self, page_index: int):
         visual_orms = (
-            self.working_doc.get_orm_query(self.working_doc.ORM.Visual)
+            self.working_doc.get_orm_query(self.working_doc.ORM.VisualORM)
             .filter_by(page_no=page_index)
             .all()
         )

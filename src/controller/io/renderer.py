@@ -72,7 +72,7 @@ class PDFRenderer(Renderer):
         if cache != None:
             return cache
         try:
-            binary = orm_ins.raw_val
+            binary = orm_ins.data_rawuuid
             cache = pickle.loads(binary)
             return cache if isinstance(cache, list) else None
         except Exception as e:

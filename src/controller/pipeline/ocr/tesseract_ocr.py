@@ -76,9 +76,9 @@ class TesseractOCR(PipelineNode):
         orm = node.working_doc.get_memo_with_update(
             self.uuid.hex, PortEnum.OUT_TEXT.value, node.uuid.bytes
         )
-        if orm == None or orm.raw_val == None:
+        if orm == None or orm.data_rawuuid == None:
             return None
-        return pickle.loads(orm.raw_val)
+        return pickle.loads(orm.data_rawuuid)
 
 
 class TesseractWidget(QFrame):

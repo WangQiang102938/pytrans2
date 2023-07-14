@@ -191,7 +191,7 @@ class GoogleTranslate(PipelineNode):
             return pickle.loads(
                 node.working_doc.get_memo_with_update(
                     self.uuid.hex, key, node.uuid.bytes
-                ).raw_val
+                ).data_rawuuid
             )
         except Exception as e:
             print(e)

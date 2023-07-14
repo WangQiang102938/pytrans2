@@ -58,14 +58,14 @@ class IOHub:
 
     def set_valid_iomodule(self, working_doc: WorkingDoc, io_module: "IOModule"):
         working_doc.set_orm(
-            working_doc.ORM.KeyVal(
+            working_doc.ORM.KeyValORM(
                 key=self.ConfigKey.VALID_IOMODULE.value, str_val=io_module.get_title()
             )
         )
 
     def get_valid_iomodule(self, working_doc: WorkingDoc):
         result = (
-            working_doc.get_orm_query(working_doc.ORM.KeyVal)
+            working_doc.get_orm_query(working_doc.ORM.KeyValORM)
             .filter_by(key=self.ConfigKey.VALID_IOMODULE.value)
             .first()
         )
@@ -106,7 +106,7 @@ class IOModule:
         memo_ins = self.sync_binary(working_doc)
         if memo_ins == None:
             return None
-        raw: bytes = memo_ins.raw_val
+        raw: bytes = memo_ins.data_rawuuid
         return raw
 
     def sync_binary(self, working_doc: WorkingDoc, binary: bytes = None):
